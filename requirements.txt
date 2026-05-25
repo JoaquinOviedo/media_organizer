@@ -1,0 +1,11 @@
+torch
+torchvision
+transformers
+opencv-python
+Pillow
+pillow-heif
+pandas
+tqdm
+scikit-learn
+mediapipe
+ffmpeg-python

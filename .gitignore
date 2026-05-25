@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Datos y reportes generados
+reporte_clasificacion.csv
+*.csv
+
+# FFmpeg binarios (son muy pesados, el usuario los provee)
+ffmpeg.exe
+ffprobe.exe
+ffmpeg
+ffprobe
+
+# Caché de modelos de HuggingFace (se descargan automáticamente)
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

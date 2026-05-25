@@ -1,0 +1,33 @@
+{
+    "paths": {
+        "input_dir": "E:/FotosFiltrar",
+        "output_importantes": "E:/FotosProcesadas/importantes",
+        "output_no_importantes": "E:/FotosProcesadas/no_importantes"
+    },
+    "processing": {
+        "num_workers": 4,
+        "batch_size_clip": 32,
+        "device": "cuda",
+        "video_sample_frames": 10,
+        "time_window_minutes": 0
+    },
+    "thresholds": {
+        "min_blur_variance": 20.0,
+        "max_darkness_ratio": 0.85,
+        "similarity_threshold": 0.90,
+        "min_score_important": 2.0
+    },
+    "scoring_weights": {
+        "has_faces": 5.0,
+        "has_a_person": 5.0,
+        "is_blurry": -2.0,
+        "is_dark": -2.0,
+        "is_screenshot": -10.0,
+        "is_document": -5.0,
+        "is_family_moment": 10.0,
+        "is_landscape": 5.0,
+        "is_pet": 5.0,
+        "is_selfie": 5.0,
+        "is_food": -1.0
+    }
+}
