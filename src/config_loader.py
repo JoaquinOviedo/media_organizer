@@ -38,3 +38,7 @@ class Config:
     @property
     def scoring_weights(self):
         return self.settings.get("scoring_weights", {})
+    
+    @property
+    def memory_management(self):
+        return self.settings.get("memory_management", {})

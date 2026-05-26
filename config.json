@@ -1,15 +1,22 @@
 {
     "paths": {
-        "input_dir": "E:/FotosFiltrar",
+        "input_dir": "E:/FotosMama",
         "output_importantes": "E:/FotosProcesadas/importantes",
         "output_no_importantes": "E:/FotosProcesadas/no_importantes"
     },
     "processing": {
-        "num_workers": 4,
-        "batch_size_clip": 32,
+        "num_workers": 2,
+        "batch_size_clip": 10,
         "device": "cuda",
-        "video_sample_frames": 10,
-        "time_window_minutes": 0
+        "video_sample_frames": 3,
+        "time_window_minutes": 1
+    },
+    "memory_management": {
+        "max_ram_mb": 2048,
+        "adaptive_blocks": true,
+        "min_block_size": 10,
+        "max_block_size": 500,
+        "estimate_bytes_per_file": 5242880
     },
     "thresholds": {
         "min_blur_variance": 20.0,
