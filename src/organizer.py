@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import pandas as pd
 from pathlib import Path
@@ -27,6 +28,18 @@ class Organizer:
             
         return dest_path
 
+    def _sanitize_filename_segment(self, segment: str) -> str:
+        """Limpia caracteres no permitidos en nombres de archivos en Windows."""
+        if not segment:
+            return ""
+        # Reemplazar la barra vertical de separación con comas
+        cleaned = segment.replace(" | ", ", ")
+        # Reemplazar barra diagonal / (usada en Duplicado/Ráfaga) con guion -
+        cleaned = cleaned.replace("/", "-")
+        # Remover o reemplazar cualquier otro carácter inválido de Windows (\/:*?"<>|)
+        cleaned = re.sub(r'[\\/:*?"<>|]', '_', cleaned)
+        return cleaned.strip()
+
     def process_and_copy(self, item: dict, base_input_dir: Path = None):
         """
         Copia el archivo a su destino final y registra en el reporte.
@@ -48,7 +61,18 @@ class Organizer:
             except ValueError:
                 pass
                 
-        dest_path = self._get_unique_path(dest_dir, file_path.name)
+        # Construir el nombre de archivo final
+        filename = file_path.name
+        if category != "importantes":
+            reasons = item.get("reasons", "")
+            if reasons:
+                sanitized_reasons = self._sanitize_filename_segment(reasons)
+                if sanitized_reasons:
+                    base_name = file_path.stem
+                    ext = file_path.suffix
+                    filename = f"{base_name}_{sanitized_reasons}{ext}"
+
+        dest_path = self._get_unique_path(dest_dir, filename)
         
         try:
             # copy2 preserva metadatos (fechas, permisos)

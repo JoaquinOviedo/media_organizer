@@ -54,6 +54,18 @@ def calculate_optimal_block_size(total_files: int, config: Config) -> int:
 def process_file_io_quality(file_path: str) -> dict:
     """Fase 1: Lectura I/O y calidad (CPU bound). Ideal para multithreading."""
     file_type = get_file_type(file_path)
+    
+    # Saltear archivos no soportados (música, documentos, etc.) silenciosamente
+    if file_type == 'unknown':
+        return {
+            "file_path": file_path,
+            "file_type": 'unknown',
+            "creation_date": None,
+            "frames": [],
+            "quality_data": {},
+            "error": None
+        }
+        
     creation_date = extract_creation_date(file_path)
     
     item_data = {
@@ -176,6 +188,13 @@ def process_block(block_files: list, block_num: int, total_blocks: int, config: 
     return processed_items
 
 def main():
+    # Configurar salida estándar a UTF-8 para evitar errores de codificación con emojis en Windows
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass  # Python < 3.7
+        
     print("🚀 Iniciando Organizador de Medios con Gestión de Memoria...")
     try:
         config = Config()
@@ -191,13 +210,12 @@ def main():
     # 1. Escanear archivos
     print("\n📂 Escaneando archivos...")
     all_files = []
-    for ext in IMAGE_EXTENSIONS.union(VIDEO_EXTENSIONS):
-        # Escaneo recursivo
-        all_files.extend([str(p) for p in input_dir.rglob(f"*{ext}")])
-        all_files.extend([str(p) for p in input_dir.rglob(f"*{ext.upper()}")])
+    for p in input_dir.rglob("*"):
+        if p.is_file():
+            all_files.append(str(p))
         
     all_files = list(set(all_files)) # Eliminar posibles duplicados
-    print(f"✓ Encontrados {len(all_files)} archivos multimedia.")
+    print(f"✓ Encontrados {len(all_files)} archivos en total.")
     
     if not all_files:
         print("No hay nada que procesar.")
@@ -211,7 +229,7 @@ def main():
     print(f"\n⚙️ Iniciando procesamiento en {total_blocks} bloque(s)...")
     
     semantic_analyzer = SemanticAnalyzer(device=config.processing.get("device", "cpu"))
-    all_processed_items = []
+    organizer = Organizer(config.paths["output_importantes"], config.paths["output_no_importantes"])
     
     for block_num in range(total_blocks):
         start_idx = block_num * block_size
@@ -219,20 +237,20 @@ def main():
         block_files = all_files[start_idx:end_idx]
         
         block_items = process_block(block_files, block_num + 1, total_blocks, config, semantic_analyzer)
-        all_processed_items.extend(block_items)
-    
-    print(f"\n✓ Procesamiento de bloques completado: {len(all_processed_items)} items procesados")
-    
-    # Fase 4: Scoring y Organización
-    print(f"\n📊 Fase 4: Calculando puntajes y organizando archivos...")
-    organizer = Organizer(config.paths["output_importantes"], config.paths["output_no_importantes"])
-    
-    for item in tqdm(all_processed_items, desc="Scoring"):
-        score, category, reasons = calculate_score(item, config.thresholds, config.scoring_weights)
-        item["score"] = score
-        item["category"] = category
-        item["reasons"] = reasons
-        organizer.process_and_copy(item, base_input_dir=input_dir)
+        
+        # Scoring y Organización inmediata de este bloque
+        if block_items:
+            print(f"  Fase 4: Calculando puntajes y organizando {len(block_items)} archivos...")
+            for item in tqdm(block_items, desc=f"  Scoring Bloque {block_num + 1}", leave=False):
+                score, category, reasons = calculate_score(item, config.thresholds, config.scoring_weights)
+                item["score"] = score
+                item["category"] = category
+                item["reasons"] = reasons
+                organizer.process_and_copy(item, base_input_dir=input_dir)
+        
+        # Liberar memoria agresivamente al terminar el bloque
+        del block_items
+        gc.collect()
         
     # Generar reporte
     organizer.generate_report(output_csv="reporte_clasificacion.csv")
