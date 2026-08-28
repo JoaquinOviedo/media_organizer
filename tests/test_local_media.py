@@ -51,7 +51,7 @@ class LocalMediaLibraryTest(unittest.TestCase):
         restored = self.library.decide(item["item_id"], "pending")
 
         self.assertTrue(original.exists())
-        self.assertEqual(Path(restored["current_path"]), original)
+        self.assertEqual(Path(restored["current_path"]).resolve(), original.resolve())
         self.assertEqual(restored["decision"], "pending")
 
     def test_rescan_does_not_reimport_discarded_files(self):
