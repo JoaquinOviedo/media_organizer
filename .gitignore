@@ -23,6 +23,21 @@ env/
 # Datos y reportes generados
 reporte_clasificacion.csv
 *.csv
+*.sqlite3
+*.sqlite3-*
+.env
+.env.*
+!.env.example
+logs/
+
+# Credenciales, firmas y perfiles locales
+*.pem
+*.key
+*.p12
+*.pfx
+*.crx
+.secrets/
+browser-profile/
 
 # FFmpeg binarios (son muy pesados, el usuario los provee)
 ffmpeg.exe

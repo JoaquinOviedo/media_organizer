@@ -1,245 +1,136 @@
-# 📷 Filtrador de Fotos
+# Photo Swipper Filter
 
-Un organizador inteligente de fotos y videos que usa **IA (CLIP + MediaPipe)** para clasificar automáticamente tu biblioteca multimedia en "importantes" y "no importantes", sin necesidad de revisión manual.
+Organizador multimedia local para revisar fotos, videos y audios con gestos o
+flechas, como una aplicación de *swipe*. La prioridad es que la limpieza sea
+rápida, privada y reversible.
 
----
+## Funciones principales
 
-## ¿Qué hace?
+- Selección nativa de una carpeta de Windows y escaneo de todas sus subcarpetas.
+- Vista previa de imágenes, videos y audios sin subir los archivos a internet.
+- Flecha izquierda para mover, derecha para conservar, abajo para decidir más
+  tarde y arriba para deshacer.
+- Movimiento reversible a `_Photo_Swipper_Filter_Para_Eliminar`, conservando la
+  estructura original de subcarpetas.
+- Historial y progreso guardados localmente en SQLite.
+- Precarga de las siguientes imágenes para reducir la espera.
+- Extensión opcional para revisar elementos abiertos directamente en Google
+  Photos y agregarlos a `Fotos a eliminar` o enviarlos a la Papelera.
+- Inicio oculto en Windows, apertura automática del navegador y actualización
+  segura desde GitHub cuando la rama local no tiene cambios.
 
-Analiza una carpeta con fotos y videos (incluyendo subcarpetas) y los copia organizados a dos destinos:
+## Inicio rápido en Windows
 
-- **`importantes/`** → fotos con personas, momentos familiares, selfies, paisajes y mascotas.
-- **`no_importantes/`** → capturas de pantalla, documentos, imágenes borrosas/oscuras y duplicados/ráfagas.
+1. Ejecutá `iniciar_mvp.bat`.
+2. Esperá a que se abra Microsoft Edge en `http://127.0.0.1:8765`.
+3. Elegí la carpeta principal que querés ordenar.
+4. Revisá los archivos con las flechas:
 
-Genera además un reporte CSV (`reporte_clasificacion.csv`) con el score, categoría y motivo de clasificación de cada archivo.
+| Tecla | Acción |
+| --- | --- |
+| `←` | Mover a la carpeta para eliminar |
+| `→` | Conservar en su ubicación |
+| `↓` | Dejar para después |
+| `↑` | Deshacer la última decisión |
 
----
+Nada se elimina definitivamente. Antes del borrado final, revisá la carpeta
+`_Photo_Swipper_Filter_Para_Eliminar`.
 
-## ¿Cómo funciona?
+Para crear o actualizar el acceso directo del Escritorio:
 
-El proceso corre en **4 fases secuenciales**:
-
-```
-Fase 1 → I/O + Calidad (paralelo, CPU)
-Fase 2 → Análisis Semántico con IA (secuencial, GPU/CPU)
-Fase 3 → Agrupación temporal + Detección de duplicados
-Fase 4 → Scoring + Copia de archivos + Reporte CSV
-```
-
-### Fase 1 — I/O y Calidad
-Lee cada archivo, extrae su fecha de creación (EXIF o metadatos del sistema), y analiza métricas de calidad técnica:
-- **Blur** → varianza del Laplaciano sobre la imagen en escala de grises.
-- **Oscuridad** → proporción de píxeles con valor < 30 (sobre 255).
-- **Sobreexposición** → proporción de píxeles con valor > 225.
-
-Esta fase corre en paralelo con `ThreadPoolExecutor`.
-
-### Fase 2 — Análisis Semántico (IA)
-Usa el modelo **CLIP (`openai/clip-vit-base-patch32`)** para clasificar el contenido de la imagen mediante *zero-shot classification* contra un conjunto de etiquetas predefinidas:
-
-| Etiqueta CLIP | Clave interna |
-|---|---|
-| family gathering or celebration | `is_family_moment` |
-| group of people together smiling | `is_family_moment` (sumada) |
-| beautiful landscape or nature | `is_landscape` |
-| screenshot of a phone or computer screen | `is_screenshot` |
-| pet or animal | `is_pet` |
-| food or meal | `is_food` |
-| document, text, or paper | `is_document` |
-| selfie or close-up portrait | `is_selfie` |
-| **a photo with a person in it** | `has_a_person` |
-
-Adicionalmente, usa **MediaPipe Face Detection** para contar rostros humanos con precisión (`num_faces`).
-
-Para videos, se extraen N frames equiespaciados (configurables) y se promedian los scores semánticos.
-
-### Fase 3 — Similitud y Duplicados
-Agrupa los archivos en ventanas temporales (configurable, en minutos). Dentro de cada grupo, compara los embeddings CLIP con **similitud del coseno**. Si dos imágenes superan el umbral de similitud, se forma un clúster y se elige el "ganador" por:
-1. Mayor cantidad de rostros detectados
-2. Mayor probabilidad de momento familiar
-3. Mayor probabilidad de selfie
-4. Mayor probabilidad de paisaje
-5. Mayor nitidez y menor oscuridad
-
-Los "perdedores" del clúster son marcados como duplicados y reciben una penalización de -20 en el score.
-
-### Fase 4 — Scoring y Organización
-Cada archivo recibe un **score numérico** basado en los pesos configurados en `config.json`. Si el score supera `min_score_important`, va a `importantes/`. Caso contrario, a `no_importantes/`.
-
-**Tratamiento especial para fotos antiguas (pre-2010):** las penalizaciones por blur y oscuridad se reducen a la mitad, ya que la calidad técnica de las cámaras de esa época era menor.
-
----
-
-## Instalación
-
-### Requisitos
-- Python 3.9+
-- [FFmpeg](https://ffmpeg.org/download.html) — los binarios `ffmpeg.exe` y `ffprobe.exe` deben estar en la raíz del proyecto o en el PATH del sistema.
-- GPU NVIDIA con CUDA (recomendado para acelerar CLIP, aunque funciona en CPU).
-
-### Pasos
-
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/filtrador-de-fotos.git
-cd filtrador-de-fotos
-
-# 2. Crear entorno virtual
-python -m venv venv
-venv\Scripts\activate   # Windows
-# source venv/bin/activate  # Linux/macOS
-
-# 3. Instalar dependencias
-pip install -r requirements.txt
-
-# 4. (Opcional, para GPU con CUDA) Instalar PyTorch con soporte CUDA
-# Ver https://pytorch.org/get-started/locally/ para el comando exacto según tu versión de CUDA
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\create_desktop_shortcut.ps1
 ```
 
----
+## Instalación manual
 
-## Configuración (`config.json`)
+Requiere Python 3.10 o posterior.
 
-```json
-{
-    "paths": {
-        "input_dir": "E:/FotosFiltrar",
-        "output_importantes": "E:/FotosProcesadas/importantes",
-        "output_no_importantes": "E:/FotosProcesadas/no_importantes"
-    },
-    "processing": {
-        "num_workers": 4,
-        "batch_size_clip": 32,
-        "device": "cuda",
-        "video_sample_frames": 10,
-        "time_window_minutes": 0
-    },
-    "thresholds": {
-        "min_blur_variance": 15.0,
-        "max_darkness_ratio": 0.90,
-        "similarity_threshold": 0.92,
-        "min_score_important": 2.0
-    },
-    "scoring_weights": {
-        "has_faces": 5.0,
-        "has_a_person": 2.0,
-        "is_blurry": -3.0,
-        "is_dark": -2.0,
-        "is_screenshot": -10.0,
-        "is_document": -5.0,
-        "is_family_moment": 10.0,
-        "is_landscape": 5.0,
-        "is_pet": 5.0,
-        "is_selfie": 5.0,
-        "is_food": -1.0
-    }
-}
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-mvp.txt
+.\.venv\Scripts\python.exe mvp_app.py
 ```
 
-### Descripción de cada campo
+La aplicación queda disponible en `http://127.0.0.1:8765`.
 
-#### `paths`
-| Campo | Descripción |
-|---|---|
-| `input_dir` | Carpeta raíz con tus fotos y videos (se escanea recursivamente) |
-| `output_importantes` | Destino de los archivos clasificados como importantes |
-| `output_no_importantes` | Destino de los archivos clasificados como no importantes |
+## Google Photos (opcional)
 
-#### `processing`
-| Campo | Descripción |
-|---|---|
-| `num_workers` | Hilos para la Fase 1 (I/O paralelo). Valor recomendado: número de núcleos de CPU |
-| `batch_size_clip` | Reservado para uso futuro (batch processing de CLIP) |
-| `device` | `"cuda"` para GPU, `"cpu"` para procesador. CUDA es ~10x más rápido |
-| `video_sample_frames` | Cantidad de frames a extraer por video para el análisis |
-| `time_window_minutes` | Ventana temporal (minutos) para agrupar fotos y detectar ráfagas. `0` = sin agrupación |
+La organización de carpetas locales no necesita una cuenta de Google. Para usar
+el Picker oficial:
 
-#### `thresholds`
-| Campo | Descripción |
-|---|---|
-| `min_blur_variance` | Score de nitidez mínimo (varianza del Laplaciano). Menor = más borrosa |
-| `max_darkness_ratio` | Proporción máxima de píxeles oscuros permitida (0.0–1.0) |
-| `similarity_threshold` | Umbral de similitud coseno para detectar duplicados (0.0–1.0). Valores altos = más estricto |
-| `min_score_important` | Score mínimo para clasificar una foto como "importante" |
+1. Creá un proyecto en [Google Cloud Console](https://console.cloud.google.com/).
+2. Habilitá Google Photos Picker API.
+3. Creá un cliente OAuth de tipo **Aplicación web**.
+4. Registrá `http://127.0.0.1:8765/auth/google/callback` como URI de redirección.
+5. Copiá `.env.example` como `.env` y completá las credenciales solo en ese
+   archivo local.
 
-#### `scoring_weights`
-Pesos para el cálculo del score final. Positivo = suma, negativo = penaliza.
+La sesión se guarda en el Administrador de credenciales de Windows. `.env`, los
+tokens, las bases locales, los perfiles del navegador y las claves de firma de
+la extensión están excluidos de Git.
 
-| Campo | Descripción |
-|---|---|
-| `has_faces` | **Bonus por cada rostro** detectado por MediaPipe (se multiplica por la cantidad) |
-| `has_a_person` | Bonus si CLIP detecta al menos una persona en la imagen (cuerpo, espalda, etc.) |
-| `is_family_moment` | Bonus por momentos familiares o grupos de personas |
-| `is_selfie` | Bonus por selfies o retratos cercanos |
-| `is_landscape` | Bonus por paisajes naturales |
-| `is_pet` | Bonus por fotos de mascotas o animales |
-| `is_food` | Penalización leve por fotos de comida |
-| `is_screenshot` | Penalización por capturas de pantalla |
-| `is_document` | Penalización por fotos de documentos o texto |
-| `is_blurry` | Penalización por imágenes borrosas |
-| `is_dark` | Penalización por imágenes demasiado oscuras |
+La API oficial de Google Photos no permite eliminar elementos existentes ni
+agregarlos libremente a un álbum. Por eso el Picker es de lectura y la extensión
+actúa únicamente sobre la interfaz visible de Google Photos. Las decisiones del
+Picker no deben interpretarse como cambios aplicados a un álbum real.
 
----
+### Extensión de Edge
 
-## Uso
+El iniciador carga automáticamente la carpeta `extension` en un perfil dedicado
+de Edge. Si necesitás cargarla manualmente:
 
-```bash
-# Asegurarte de estar en la raíz del proyecto con el entorno activado
-python main.py
-```
+1. Abrí `edge://extensions`.
+2. Activá **Modo para desarrolladores**.
+3. Elegí **Cargar extensión sin empaquetar**.
+4. Seleccioná la carpeta `extension` de este repositorio.
 
-El script mostrará el progreso por fase y generará `reporte_clasificacion.csv` al finalizar.
-
----
+La extensión usa las flechas izquierda y derecha dentro de una foto o video
+abierto. Google puede cambiar su interfaz; si una operación no recibe una
+confirmación visible, se registra como fallida y no como completada.
 
 ## Estructura del proyecto
 
-```
-filtrador-de-fotos/
-│
-├── main.py                  # Punto de entrada principal, orquesta las 4 fases
-├── config.json              # Configuración de rutas, umbrales y pesos
-├── requirements.txt         # Dependencias de Python
-├── ffmpeg.exe               # Binario FFmpeg (Windows)
-├── ffprobe.exe              # Binario FFprobe (Windows)
-│
-└── src/
-    ├── __init__.py
-    ├── config_loader.py     # Carga y valida config.json
-    ├── media_io.py          # Lectura de imágenes/videos, extracción de fechas y frames
-    ├── quality.py           # Análisis de nitidez e iluminación (OpenCV)
-    ├── semantic.py          # Análisis semántico con CLIP y detección de rostros (MediaPipe)
-    ├── similarity.py        # Agrupación temporal y detección de duplicados/ráfagas
-    ├── scoring.py           # Cálculo del score final y decisión de categoría
-    └── organizer.py         # Copia de archivos al destino y generación del reporte CSV
+```text
+extension/                  Extensión local para Google Photos
+scripts/                    Inicio automático y acceso directo de Windows
+src/local_media.py          Escaneo, movimientos y restauración de archivos
+src/mvp_store.py            Persistencia local en SQLite
+src/google_photos_picker.py Integración opcional con Google Photos Picker
+src/token_vault.py          Sesión OAuth en el almacén seguro de Windows
+tests/                      Pruebas automatizadas
+web/                        Interfaz local
+mvp_app.py                  Servidor y API local
 ```
 
-### Descripción de cada archivo
+El clasificador con IA original continúa en `main.py` y `src/`, pero el flujo
+principal del producto es ahora la revisión manual, local y reversible.
 
-| Archivo | Responsabilidad |
-|---|---|
-| `main.py` | Orquesta todo el pipeline: escaneo → calidad → semántica → similitud → scoring → copia |
-| `config.json` | Configuración completa del sistema (rutas, pesos, umbrales, hardware) |
-| `requirements.txt` | Lista de dependencias pip |
-| `src/config_loader.py` | Clase `Config` que carga `config.json` y expone sus secciones como propiedades |
-| `src/media_io.py` | Lee imágenes (incluyendo `.heic`) y videos, extrae fecha EXIF, y usa FFmpeg para frames |
-| `src/quality.py` | Calcula `blur_variance`, `darkness_ratio` y `brightness_ratio` usando OpenCV |
-| `src/semantic.py` | Clasifica imágenes con CLIP zero-shot y cuenta rostros con MediaPipe |
-| `src/similarity.py` | Agrupa por ventana temporal y detecta duplicados/ráfagas por similitud coseno |
-| `src/scoring.py` | Suma pesos según los atributos detectados y decide la categoría final |
-| `src/organizer.py` | Copia archivos a `importantes/` o `no_importantes/` y genera el CSV de reporte |
+## Desarrollo y mantenimiento
 
----
+- [Guía para contribuir](CONTRIBUTING.md)
+- [Arquitectura](docs/ARCHITECTURE.md)
+- [Seguridad y privacidad](docs/SECURITY.md)
+- [Hoja de ruta](docs/ROADMAP.md)
+- [Historial de cambios](CHANGELOG.md)
+- [Instrucciones para asistentes de código](AGENTS.md)
 
-## Formatos soportados
+Ejecutar las pruebas:
 
-| Tipo | Extensiones |
-|---|---|
-| Imágenes | `.jpg`, `.jpeg`, `.png`, `.heic`, `.webp` |
-| Videos | `.mp4`, `.mov`, `.avi`, `.mkv` |
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+node --check web\app.js
+node --check extension\content.js
+node --check extension\background.js
+```
 
----
+## Privacidad
+
+Los archivos seleccionados permanecen en el equipo. No publiques `.env`, bases
+SQLite, registros, claves privadas, paquetes firmados de la extensión, perfiles
+del navegador ni bibliotecas personales. Consultá `docs/SECURITY.md` antes de
+crear un commit.
 
 ## Licencia
 
-MIT
+MIT. Ver [LICENSE](LICENSE).

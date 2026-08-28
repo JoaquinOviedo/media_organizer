@@ -1,0 +1,6 @@
+Flask>=3.0,<4
+keyring>=25,<26
+Pillow>=10,<12
+pillow-heif>=1.5,<2
+python-dotenv>=1.0,<2
+requests>=2.31,<3

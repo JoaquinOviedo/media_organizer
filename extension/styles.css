@@ -1,0 +1,70 @@
+#swipeclean-controls {
+  position: fixed;
+  z-index: 2147483646;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 999px;
+  background: rgba(13, 18, 32, .9);
+  box-shadow: 0 18px 52px rgba(0,0,0,.45);
+  backdrop-filter: blur(16px);
+  color: white;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+#swipeclean-controls button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 15px;
+  color: white;
+  font: 700 13px/1 system-ui, sans-serif;
+  cursor: pointer;
+}
+
+.swipeclean-mode-label {
+  display: grid;
+  gap: 3px;
+  color: rgba(255,255,255,.72);
+  font: 600 10px/1 system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+#swipeclean-mode {
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 8px;
+  padding: 5px 7px;
+  background: #1b2437;
+  color: white;
+  font: 700 12px/1 system-ui, sans-serif;
+}
+
+#swipeclean-delete { background: #d94668; }
+#swipeclean-controls[data-mode="trash"] { border-color: rgba(255, 100, 130, .6); background: rgba(55, 12, 24, .94); }
+#swipeclean-controls[data-mode="trash"] #swipeclean-delete { background: #b91c3c; }
+#swipeclean-keep { background: #16865e; }
+#swipeclean-prepare { background: rgba(255,255,255,.12); }
+#swipeclean-controls button:disabled { opacity: .48; cursor: wait; }
+#swipeclean-controls select:disabled { opacity: .48; cursor: wait; }
+
+#swipeclean-toast {
+  position: fixed;
+  z-index: 2147483647;
+  left: 50%;
+  bottom: 92px;
+  transform: translateX(-50%);
+  max-width: min(520px, calc(100vw - 28px));
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: white;
+  color: #111827;
+  box-shadow: 0 14px 46px rgba(0,0,0,.45);
+  font: 600 13px/1.4 system-ui, sans-serif;
+}
+
+#swipeclean-toast[data-kind="error"] { background: #ffdce4; color: #7a1530; }
