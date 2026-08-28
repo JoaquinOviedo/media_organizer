@@ -86,8 +86,11 @@ de Edge. Si necesitás cargarla manualmente:
 4. Seleccioná la carpeta `extension` de este repositorio.
 
 La extensión usa las flechas izquierda y derecha dentro de una foto o video
-abierto. Google puede cambiar su interfaz; si una operación no recibe una
-confirmación visible, se registra como fallida y no como completada.
+abierto. Después de conservar o descartar, avanza a la siguiente foto; en la
+biblioteca principal normalmente será una más antigua. En álbumes y búsquedas
+respeta el orden de ese contexto. Google puede cambiar su interfaz; si una
+operación no recibe una confirmación visible, se registra como fallida y no como
+completada.
 
 ## Estructura del proyecto
 

@@ -7,6 +7,11 @@
     moveToTrash: ["Move to trash", "Move to bin", "Mover a la papelera"],
     movedToTrash: ["Moved to trash", "Moved to bin", "Movido a la papelera", "Se movió a la papelera"],
     close: ["Close", "Cerrar"],
+    next: [
+      "View next photo", "Next photo", "Next image", "Next item",
+      "Ver siguiente foto", "Siguiente foto", "Foto siguiente",
+      "Siguiente imagen", "Elemento siguiente",
+    ],
   };
 
   let busy = false;
@@ -21,16 +26,52 @@
   }
 
   function normalized(value) {
-    return (value || "").trim().toLocaleLowerCase();
+    return (value || "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim()
+      .toLocaleLowerCase();
+  }
+
+  function accessibleName(element) {
+    return element.getAttribute("aria-label")
+      || element.getAttribute("data-tooltip")
+      || element.getAttribute("title")
+      || element.textContent
+      || "";
   }
 
   function byAccessibleName(role, candidates) {
     const expected = candidates.map(normalized);
     return [...document.querySelectorAll(`[role="${role}"], ${role === "button" ? "button" : "span"}`)]
       .find((element) => {
-        const name = element.getAttribute("aria-label") || element.textContent;
+        const name = accessibleName(element);
         return expected.includes(normalized(name));
       });
+  }
+
+  function findOlderNavigationButton() {
+    const expected = labels.next.map(normalized);
+    const candidates = [...document.querySelectorAll('button, [role="button"]')]
+      .filter((element) => !element.closest("#swipeclean-controls") && !element.disabled);
+
+    const labeled = candidates.find((element) => {
+      const name = normalized(accessibleName(element));
+      return expected.some((label) => name === label || name.includes(label));
+    });
+    if (labeled) return labeled;
+
+    const iconNames = new Set(["chevron_right", "navigate_next", "arrow_forward_ios", "›", ">"]);
+    return candidates.find((element) => {
+      const rect = element.getBoundingClientRect();
+      const icon = normalized(element.textContent);
+      return iconNames.has(icon)
+        && rect.width > 0
+        && rect.height > 0
+        && rect.left > window.innerWidth / 2
+        && rect.top > window.innerHeight * 0.2
+        && rect.bottom < window.innerHeight * 0.8;
+    });
   }
 
   async function waitFor(find, timeout = 5000) {
@@ -139,8 +180,10 @@
       album.click();
       await waitFor(() => !document.querySelector('[role="dialog"]'), 5000);
       await record("delete", "added", `Agregada a ${ALBUM_NAME}`, media);
-      showToast(`Agregada a “${ALBUM_NAME}”. Todavía no fue eliminada.`);
-      await goNext();
+      const advanced = await goToOlderPhoto(media.id);
+      showToast(advanced
+        ? `Agregada a “${ALBUM_NAME}”. Mostrando la siguiente foto, normalmente más antigua.`
+        : `Agregada a “${ALBUM_NAME}”, pero no encontré la siguiente foto.`);
     } catch (error) {
       await record("delete", "failed", error.message, media);
       showToast(`No se pudo agregar al álbum: ${error.message}`, "error");
@@ -179,7 +222,7 @@
 
       await record("delete", "trashed", "Movida a la Papelera", media);
       showToast("Movida a la Papelera de Google Photos.");
-      if (photoId() === media.id) await goNext();
+      if (photoId() === media.id) await goToOlderPhoto(media.id);
     } catch (error) {
       await record("delete", "failed", error.message, media);
       showToast(`No se pudo mover a la Papelera: ${error.message}`, "error");
@@ -196,19 +239,34 @@
   async function keepCurrentPhoto() {
     if (busy || !photoId()) return;
     setBusy(true);
-    await record("keep", "not_needed", "Conservar");
-    showToast("Marcada para conservar.");
-    await goNext();
-    setBusy(false);
+    const currentId = photoId();
+    try {
+      await record("keep", "not_needed", "Conservar");
+      const advanced = await goToOlderPhoto(currentId);
+      showToast(advanced
+        ? "Marcada para conservar. Mostrando la siguiente foto, normalmente más antigua."
+        : "Marcada para conservar, pero no encontré la siguiente foto.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  async function goNext() {
-    const next = [...document.querySelectorAll("button")].find((button) => {
-      const name = normalized(button.getAttribute("aria-label"));
-      return name === "view next photo" || name === "ver siguiente foto";
-    });
-    next?.click();
-    await sleep(250);
+  async function goToOlderPhoto(startingId = photoId()) {
+    // En la biblioteca principal, Google Photos ordena de reciente a antigua,
+    // por lo que "siguiente" normalmente avanza hacia atrás en el tiempo. En
+    // álbumes o búsquedas se respeta el orden definido por ese contexto.
+    const next = findOlderNavigationButton();
+    if (!next) return false;
+    next.click();
+    try {
+      await waitFor(() => {
+        const currentId = photoId();
+        return currentId && currentId !== startingId ? currentId : null;
+      }, 3500);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function prepareAlbum() {
@@ -251,7 +309,7 @@
       </label>
       <button id="swipeclean-delete" type="button">← Álbum</button>
       <button id="swipeclean-prepare" type="button">Preparar álbum</button>
-      <button id="swipeclean-keep" type="button">Conservar →</button>
+      <button id="swipeclean-keep" type="button" title="Conservar y avanzar a la siguiente foto, normalmente más antigua">Conservar →</button>
     `;
     const mode = controls.querySelector("#swipeclean-mode");
     const discard = controls.querySelector("#swipeclean-delete");

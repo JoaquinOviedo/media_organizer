@@ -13,6 +13,7 @@ class ExtensionFilesTest(unittest.TestCase):
         content = (ROOT / "extension" / "content.js").read_text(encoding="utf-8")
 
         self.assertEqual(manifest["name"], "Photo Swipper Filter para Google Photos")
+        self.assertEqual(manifest["version"], "0.4.1")
         self.assertEqual(manifest["background"]["service_worker"], "background.js")
         self.assertEqual(manifest["content_scripts"][0]["run_at"], "document_start")
         self.assertIn("http://127.0.0.1:8765/*", manifest["host_permissions"])
@@ -21,6 +22,9 @@ class ExtensionFilesTest(unittest.TestCase):
         self.assertIn('sendToSwipeClean("swipeclean:heartbeat")', content)
         self.assertIn('window.addEventListener("keydown", handleKeyboardDecision, true)', content)
         self.assertIn("event.stopImmediatePropagation()", content)
+        self.assertIn('document.querySelectorAll(\'button, [role="button"]\')', content)
+        self.assertIn("goToOlderPhoto(currentId)", content)
+        self.assertIn("Mostrando la siguiente foto, normalmente más antigua", content)
         self.assertNotIn('fetch(`${SERVER}', content)
 
 

@@ -7,6 +7,9 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 ### Cambiado
 
 - La aplicación y la extensión pasan a llamarse **Photo Swipper Filter**.
+- Al conservar o descartar en Google Photos, la extensión avanza a la siguiente
+  foto —normalmente más antigua en la biblioteca principal— y reconoce más
+  variantes del control de navegación.
 - La carpeta para nuevos descartes pasa a llamarse
   `_Photo_Swipper_Filter_Para_Eliminar`.
 - Se conserva compatibilidad con descartes, sesión y perfil de navegador de la
