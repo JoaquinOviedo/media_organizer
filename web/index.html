@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Photo Swipper Filter · Organizador local</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">ORGANIZADOR MULTIMEDIA LOCAL</p>
+          <h1>Photo Swipper Filter</h1>
+        </div>
+        <span id="folderBadge" class="badge">Sin carpeta elegida</span>
+      </header>
+
+      <section class="panel setup-panel local-setup">
+        <div class="setup-copy-block">
+          <h2>Elegí la carpeta que querés ordenar</h2>
+          <p id="folderCopy">
+            Se incluirán automáticamente todas sus subcarpetas, sin subir ningún archivo a internet.
+          </p>
+          <code id="rootPath" class="selected-path hidden"></code>
+        </div>
+        <div class="setup-actions">
+          <button id="selectFolderButton" class="button primary" type="button">Elegir carpeta</button>
+          <button id="rescanFolderButton" class="button ghost hidden" type="button">Volver a escanear</button>
+        </div>
+      </section>
+
+      <section class="workspace">
+        <aside class="stats panel">
+          <div><strong id="pendingCount">0</strong><span>Pendientes</span></div>
+          <div><strong id="keepCount">0</strong><span>Conservar</span></div>
+          <div><strong id="deleteCount">0</strong><span>Movidos</span></div>
+          <div><strong id="laterCount">0</strong><span>Después</span></div>
+        </aside>
+
+        <section class="deck-panel panel">
+          <div id="emptyState" class="empty-state">
+            <div class="empty-icon">↔</div>
+            <h2>Elegí una carpeta para comenzar</h2>
+            <p>Podrás revisar fotos, videos y audios de todas sus subcarpetas.</p>
+            <button id="reviewLaterButton" class="button ghost hidden" type="button">Revisar los de después</button>
+          </div>
+
+          <article id="card" class="media-card hidden" aria-live="polite">
+            <div class="decision-hint keep-hint">CONSERVAR</div>
+            <div class="decision-hint delete-hint">MOVER</div>
+            <div class="media-stage">
+              <img id="mediaImage" class="hidden" alt="Archivo seleccionado" draggable="false" decoding="async" />
+              <video id="mediaVideo" class="hidden" controls playsinline preload="metadata"></video>
+              <div id="audioStage" class="audio-stage hidden">
+                <div class="audio-icon" aria-hidden="true">♫</div>
+                <strong id="audioName"></strong>
+                <audio id="mediaAudio" controls preload="metadata"></audio>
+              </div>
+              <div id="mediaLoader" class="media-loader" aria-hidden="true"></div>
+            </div>
+            <div class="media-meta">
+              <strong id="mediaName"></strong>
+              <span id="mediaDetail"></span>
+              <small id="mediaRelativePath"></small>
+            </div>
+          </article>
+
+          <div id="controlsBar" class="controls hidden">
+            <button id="deleteButton" class="round danger" aria-label="Mover a la carpeta para eliminar">←</button>
+            <button id="laterButton" class="round neutral" aria-label="Decidir después">⌛</button>
+            <button id="keepButton" class="round success" aria-label="Conservar en su lugar">→</button>
+          </div>
+          <button id="undoButton" class="undo hidden" disabled>Deshacer último movimiento</button>
+          <p id="keyboardHelp" class="keyboard-help hidden" aria-label="Atajos de teclado">
+            <kbd>←</kbd> mover · <kbd>→</kbd> conservar ·
+            <kbd>↓</kbd> después · <kbd>↑</kbd> deshacer
+          </p>
+        </section>
+
+        <aside class="panel queue-panel">
+          <h2>Carpeta para eliminar</h2>
+          <p>
+            La flecha izquierda mueve el archivo inmediatamente, manteniendo la misma estructura de subcarpetas.
+          </p>
+          <code id="discardPath" class="extension-path">Elegí una carpeta para ver el destino.</code>
+          <p class="safety-note">Nada se borra definitivamente. Podés revisar esta carpeta y eliminar todo cuando estés seguro.</p>
+
+          <h3>Movidos recientemente</h3>
+          <div id="movedQueue" class="local-delete-queue">Todavía no moviste archivos.</div>
+
+          <details class="cloud-tools">
+            <summary>También uso Google Photos</summary>
+            <p>La extensión continúa disponible para revisar directamente en Google Photos.</p>
+            <span id="extensionBadge" class="extension-badge">Comprobando extensión…</span>
+            <div class="cloud-actions">
+              <a class="button ghost" href="https://photos.google.com/" target="_blank" rel="noreferrer">Abrir Google Photos</a>
+            </div>
+            <details class="extension-setup">
+              <summary>Carpeta de la extensión</summary>
+              <code id="extensionPath" class="extension-path">Cargando…</code>
+              <button id="copyExtensionPath" class="copy-path" type="button">Copiar carpeta</button>
+            </details>
+            <h3>Operaciones reales en Google Photos</h3>
+            <div id="extensionQueue" class="extension-queue"></div>
+          </details>
+        </aside>
+      </section>
+
+      <div id="toast" class="toast hidden" role="status"></div>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
