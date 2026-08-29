@@ -11,6 +11,27 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 const card = $("card");
+const MEDIA_LAYOUT_CLASSES = ["media-landscape", "media-portrait", "media-square", "media-audio"];
+
+function setMediaLayout(width, height, kind = "visual") {
+  card.classList.remove(...MEDIA_LAYOUT_CLASSES);
+  if (kind === "audio") {
+    card.classList.add("media-audio");
+    return;
+  }
+
+  const safeWidth = Number(width || 0);
+  const safeHeight = Number(height || 0);
+  if (safeWidth <= 0 || safeHeight <= 0) {
+    card.classList.add("media-landscape");
+    return;
+  }
+
+  const ratio = safeWidth / safeHeight;
+  if (ratio < 0.9) card.classList.add("media-portrait");
+  else if (ratio > 1.1) card.classList.add("media-landscape");
+  else card.classList.add("media-square");
+}
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -72,6 +93,7 @@ function stopPlayers() {
 
 function clearMedia() {
   stopPlayers();
+  card.classList.remove(...MEDIA_LAYOUT_CLASSES);
   const image = $("mediaImage");
   image.removeAttribute("src");
   image.classList.add("hidden");
@@ -87,8 +109,13 @@ function showMedia(item) {
 
   if (item.type === "VIDEO") {
     const video = $("mediaVideo");
+    setMediaLayout(16, 9);
     video.classList.remove("hidden");
-    video.onloadeddata = () => card.classList.remove("loading");
+    video.onloadedmetadata = () => setMediaLayout(video.videoWidth, video.videoHeight);
+    video.onloadeddata = () => {
+      setMediaLayout(video.videoWidth, video.videoHeight);
+      card.classList.remove("loading");
+    };
     video.onerror = () => {
       card.classList.remove("loading");
       toast("El navegador no pudo reproducir este formato de video.");
@@ -97,6 +124,7 @@ function showMedia(item) {
     video.load();
   } else if (item.type === "AUDIO") {
     const audio = $("mediaAudio");
+    setMediaLayout(1, 1, "audio");
     $("audioStage").classList.remove("hidden");
     $("audioName").textContent = item.filename;
     audio.onloadedmetadata = () => card.classList.remove("loading");
@@ -108,15 +136,22 @@ function showMedia(item) {
     audio.load();
   } else {
     const image = $("mediaImage");
+    setMediaLayout(4, 3);
     image.classList.remove("hidden");
     image.alt = item.filename || "Foto local";
-    image.onload = () => card.classList.remove("loading");
+    image.onload = () => {
+      setMediaLayout(image.naturalWidth, image.naturalHeight);
+      card.classList.remove("loading");
+    };
     image.onerror = () => {
       card.classList.remove("loading");
       toast("No se pudo previsualizar esta imagen.");
     };
     image.src = url;
-    if (image.complete) card.classList.remove("loading");
+    if (image.complete && image.naturalWidth > 0) {
+      setMediaLayout(image.naturalWidth, image.naturalHeight);
+      card.classList.remove("loading");
+    }
   }
   state.renderedItemId = item.item_id;
 }

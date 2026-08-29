@@ -15,6 +15,8 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - El acceso a Google Photos queda visible en la parte superior de la aplicación.
 - La revisión local adopta una interfaz más simple, con exploración de carpetas
   destacada, visor multimedia grande y centrado, y botones con texto claro.
+- El visor cambia automáticamente de forma para aprovechar mejor la pantalla
+  con fotos y videos verticales, horizontales o cuadrados, sin recortarlos.
 - La carpeta para nuevos descartes pasa a llamarse
   `_Photo_Swipper_Filter_Para_Eliminar`.
 - Se conserva compatibilidad con descartes, sesión y perfil de navegador de la

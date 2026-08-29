@@ -10,6 +10,8 @@ rápida, privada y reversible.
 - Vista previa de imágenes, videos y audios sin subir los archivos a internet.
 - Interfaz de lectura sencilla, con el contenido grande y centrado y acciones
   explicadas en pantalla.
+- Visor adaptable a la orientación vertical, horizontal o cuadrada de cada
+  foto y video, siempre mostrando el contenido completo.
 - Flecha izquierda para mover, derecha para conservar, abajo para decidir más
   tarde y arriba para deshacer.
 - Movimiento reversible a `_Photo_Swipper_Filter_Para_Eliminar`, conservando la
