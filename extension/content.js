@@ -18,6 +18,10 @@
   let discardMode = "album";
   let gestureStart = null;
   let lastUrl = location.href;
+  let rightKeyHeld = false;
+  let rapidKeepLoopActive = false;
+  let rapidReachedEnd = false;
+  let queuedKeepCount = 0;
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -99,6 +103,7 @@
     document.querySelectorAll("#swipeclean-controls button, #swipeclean-controls select").forEach((control) => {
       control.disabled = value;
     });
+    if (!value) window.queueMicrotask(flushQueuedKeep);
   }
 
   function sendToSwipeClean(type, payload = null) {
@@ -236,16 +241,36 @@
     else addCurrentPhotoToAlbum();
   }
 
-  async function keepCurrentPhoto() {
-    if (busy || !photoId()) return;
+  function requestKeepCurrentPhoto() {
+    if (!photoId()) return;
+    if (busy) {
+      // Conserva pulsaciones cortas realizadas mientras Google termina de
+      // cambiar de foto, en vez de perderlas silenciosamente.
+      queuedKeepCount = Math.min(queuedKeepCount + 1, 6);
+      return;
+    }
+    void keepCurrentPhoto();
+  }
+
+  function flushQueuedKeep() {
+    if (busy || queuedKeepCount === 0 || rapidKeepLoopActive) return;
+    queuedKeepCount -= 1;
+    void keepCurrentPhoto();
+  }
+
+  async function keepCurrentPhoto({ quiet = false } = {}) {
+    if (busy || !photoId()) return false;
     setBusy(true);
     const currentId = photoId();
     try {
       await record("keep", "not_needed", "Conservar");
       const advanced = await goToOlderPhoto(currentId);
-      showToast(advanced
-        ? "Marcada para conservar. Mostrando la siguiente foto, normalmente más antigua."
-        : "Marcada para conservar, pero no encontré la siguiente foto.");
+      if (!quiet) {
+        showToast(advanced
+          ? "Marcada para conservar. Mostrando la siguiente foto, normalmente más antigua."
+          : "Marcada para conservar, pero no encontré la siguiente foto.");
+      }
+      return advanced;
     } finally {
       setBusy(false);
     }
@@ -255,7 +280,9 @@
     // En la biblioteca principal, Google Photos ordena de reciente a antigua,
     // por lo que "siguiente" normalmente avanza hacia atrás en el tiempo. En
     // álbumes o búsquedas se respeta el orden definido por ese contexto.
-    const next = findOlderNavigationButton();
+    // Durante una navegación rápida Google reconstruye los controles. Esperar
+    // a que reaparezcan evita que una pulsación corta se pierda en esa ventana.
+    const next = await waitFor(findOlderNavigationButton, 1800).catch(() => null);
     if (!next) return false;
     next.click();
     try {
@@ -266,6 +293,34 @@
       return true;
     } catch {
       return false;
+    }
+  }
+
+  async function runRapidKeepLoop() {
+    if (rapidKeepLoopActive || rapidReachedEnd) return;
+    rapidKeepLoopActive = true;
+    let keptCount = 0;
+    try {
+      while (rightKeyHeld) {
+        if (busy) {
+          await sleep(30);
+          continue;
+        }
+        if (!photoId()) break;
+        const advanced = await keepCurrentPhoto({ quiet: true });
+        keptCount += 1;
+        if (!advanced) {
+          rapidReachedEnd = true;
+          break;
+        }
+        await sleep(35);
+      }
+    } finally {
+      rapidKeepLoopActive = false;
+      if (keptCount > 0) {
+        showToast(`${keptCount} foto${keptCount === 1 ? "" : "s"} conservada${keptCount === 1 ? "" : "s"} con avance rápido.`);
+      }
+      window.queueMicrotask(flushQueuedKeep);
     }
   }
 
@@ -332,7 +387,7 @@
     });
     discard.addEventListener("click", discardCurrentPhoto);
     controls.querySelector("#swipeclean-prepare").addEventListener("click", prepareAlbum);
-    controls.querySelector("#swipeclean-keep").addEventListener("click", keepCurrentPhoto);
+    controls.querySelector("#swipeclean-keep").addEventListener("click", requestKeepCurrentPhoto);
     document.body.appendChild(controls);
   }
 
@@ -348,11 +403,11 @@
     gestureStart = null;
     if (Math.abs(dx) < 140 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
     if (dx < 0) discardCurrentPhoto();
-    else keepCurrentPhoto();
+    else requestKeepCurrentPhoto();
   }, true);
 
   function handleKeyboardDecision(event) {
-    if (!photoId() || busy || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (!photoId() || event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.target instanceof Element
       && event.target.closest("input, textarea, select, video, [contenteditable='true']")) return;
     if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -360,11 +415,30 @@
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
-    if (event.key === "ArrowLeft") discardCurrentPhoto();
-    else keepCurrentPhoto();
+    if (event.key === "ArrowLeft") {
+      // No repetir automáticamente una operación que puede terminar en álbum o
+      // Papelera. La repetición rápida está reservada para conservar.
+      if (!busy && !event.repeat) discardCurrentPhoto();
+      return;
+    }
+
+    rightKeyHeld = true;
+    if (event.repeat) {
+      void runRapidKeepLoop();
+    } else {
+      rapidReachedEnd = false;
+      requestKeepCurrentPhoto();
+    }
+  }
+
+  function handleKeyboardRelease(event) {
+    if (event.key !== "ArrowRight") return;
+    rightKeyHeld = false;
+    rapidReachedEnd = false;
   }
 
   window.addEventListener("keydown", handleKeyboardDecision, true);
+  window.addEventListener("keyup", handleKeyboardRelease, true);
 
   const observer = new MutationObserver(() => {
     if (location.href !== lastUrl) lastUrl = location.href;

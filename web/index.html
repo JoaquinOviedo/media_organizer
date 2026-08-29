@@ -9,40 +9,53 @@
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
+        <div class="brand-block">
           <p class="eyebrow">ORGANIZADOR MULTIMEDIA LOCAL</p>
           <h1>Photo Swipper Filter</h1>
+          <p class="tagline">Revisá tus recuerdos de a uno, sin borrar nada por accidente.</p>
         </div>
-        <span id="folderBadge" class="badge">Sin carpeta elegida</span>
+        <div class="topbar-actions">
+          <span id="folderBadge" class="badge">Sin carpeta elegida</span>
+          <a class="google-photos-button" href="https://photos.google.com/" target="_blank" rel="noreferrer">
+            <span class="google-photos-icon" aria-hidden="true">✦</span>
+            <span>
+              <strong>Abrir Google Photos</strong>
+              <small>Revisar fotos de tu cuenta</small>
+            </span>
+          </a>
+        </div>
       </header>
 
-      <section class="panel setup-panel local-setup">
+      <section id="folderSetup" class="panel setup-panel local-setup">
+        <div class="step-number" aria-hidden="true">1</div>
         <div class="setup-copy-block">
-          <h2>Elegí la carpeta que querés ordenar</h2>
+          <h2>Elegí una carpeta de esta computadora</h2>
           <p id="folderCopy">
-            Se incluirán automáticamente todas sus subcarpetas, sin subir ningún archivo a internet.
+            También vamos a mostrar las fotos, videos y audios que estén dentro de sus subcarpetas.
           </p>
           <code id="rootPath" class="selected-path hidden"></code>
         </div>
         <div class="setup-actions">
-          <button id="selectFolderButton" class="button primary" type="button">Elegir carpeta</button>
-          <button id="rescanFolderButton" class="button ghost hidden" type="button">Volver a escanear</button>
+          <button id="selectFolderButton" class="button primary large" type="button">
+            <span aria-hidden="true">📁</span> Explorar carpetas
+          </button>
+          <button id="rescanFolderButton" class="button ghost hidden" type="button">Buscar archivos nuevos</button>
         </div>
       </section>
 
-      <section class="workspace">
-        <aside class="stats panel">
-          <div><strong id="pendingCount">0</strong><span>Pendientes</span></div>
-          <div><strong id="keepCount">0</strong><span>Conservar</span></div>
-          <div><strong id="deleteCount">0</strong><span>Movidos</span></div>
-          <div><strong id="laterCount">0</strong><span>Después</span></div>
-        </aside>
+      <section class="stats panel" aria-label="Progreso de la revisión">
+        <div><strong id="pendingCount">0</strong><span>Por revisar</span></div>
+        <div><strong id="keepCount">0</strong><span>Conservados</span></div>
+        <div><strong id="deleteCount">0</strong><span>Para eliminar</span></div>
+        <div><strong id="laterCount">0</strong><span>Para después</span></div>
+      </section>
 
+      <section class="workspace">
         <section class="deck-panel panel">
           <div id="emptyState" class="empty-state">
-            <div class="empty-icon">↔</div>
-            <h2>Elegí una carpeta para comenzar</h2>
-            <p>Podrás revisar fotos, videos y audios de todas sus subcarpetas.</p>
+            <div class="empty-icon">📁</div>
+            <h2>Primero explorá una carpeta</h2>
+            <p>Después vas a poder mirar cada foto, video o audio bien grande en esta pantalla.</p>
             <button id="reviewLaterButton" class="button ghost hidden" type="button">Revisar los de después</button>
           </div>
 
@@ -67,45 +80,56 @@
           </article>
 
           <div id="controlsBar" class="controls hidden">
-            <button id="deleteButton" class="round danger" aria-label="Mover a la carpeta para eliminar">←</button>
-            <button id="laterButton" class="round neutral" aria-label="Decidir después">⌛</button>
-            <button id="keepButton" class="round success" aria-label="Conservar en su lugar">→</button>
+            <button id="deleteButton" class="decision-button danger" aria-label="Mover a la carpeta para eliminar">
+              <span class="decision-icon">←</span>
+              <span><strong>Mover</strong><small>para eliminar</small></span>
+            </button>
+            <button id="laterButton" class="decision-button neutral" aria-label="Decidir después">
+              <span class="decision-icon">⌛</span>
+              <span><strong>Después</strong><small>decidir más tarde</small></span>
+            </button>
+            <button id="keepButton" class="decision-button success" aria-label="Conservar en su lugar">
+              <span><strong>Conservar</strong><small>dejar en su lugar</small></span>
+              <span class="decision-icon">→</span>
+            </button>
           </div>
-          <button id="undoButton" class="undo hidden" disabled>Deshacer último movimiento</button>
+          <button id="undoButton" class="undo hidden" disabled>↶ Deshacer la última decisión</button>
           <p id="keyboardHelp" class="keyboard-help hidden" aria-label="Atajos de teclado">
-            <kbd>←</kbd> mover · <kbd>→</kbd> conservar ·
+            También podés usar el teclado: <kbd>←</kbd> mover · <kbd>→</kbd> conservar ·
             <kbd>↓</kbd> después · <kbd>↑</kbd> deshacer
           </p>
         </section>
+      </section>
 
-        <aside class="panel queue-panel">
-          <h2>Carpeta para eliminar</h2>
-          <p>
-            La flecha izquierda mueve el archivo inmediatamente, manteniendo la misma estructura de subcarpetas.
-          </p>
-          <code id="discardPath" class="extension-path">Elegí una carpeta para ver el destino.</code>
-          <p class="safety-note">Nada se borra definitivamente. Podés revisar esta carpeta y eliminar todo cuando estés seguro.</p>
+      <details class="panel queue-panel">
+        <summary>
+          <span><strong>Revisar lo que moviste</strong><small>Nada se elimina automáticamente</small></span>
+          <span class="summary-action">Ver detalles</span>
+        </summary>
+        <div class="queue-content">
+          <section>
+            <h2>Carpeta para eliminar</h2>
+            <p>La flecha izquierda mueve el archivo manteniendo sus subcarpetas.</p>
+            <code id="discardPath" class="extension-path">Elegí una carpeta para ver el destino.</code>
+            <p class="safety-note">Todo se puede deshacer. Eliminá definitivamente los archivos solo después de revisar esta carpeta.</p>
+            <h3>Movidos recientemente</h3>
+            <div id="movedQueue" class="local-delete-queue">Todavía no moviste archivos.</div>
+          </section>
 
-          <h3>Movidos recientemente</h3>
-          <div id="movedQueue" class="local-delete-queue">Todavía no moviste archivos.</div>
-
-          <details class="cloud-tools">
-            <summary>También uso Google Photos</summary>
-            <p>La extensión continúa disponible para revisar directamente en Google Photos.</p>
+          <section class="cloud-tools">
+            <h2>Google Photos</h2>
+            <p>Estado del asistente que funciona sobre Google Photos.</p>
             <span id="extensionBadge" class="extension-badge">Comprobando extensión…</span>
-            <div class="cloud-actions">
-              <a class="button ghost" href="https://photos.google.com/" target="_blank" rel="noreferrer">Abrir Google Photos</a>
-            </div>
             <details class="extension-setup">
-              <summary>Carpeta de la extensión</summary>
+              <summary>Configuración de la extensión</summary>
               <code id="extensionPath" class="extension-path">Cargando…</code>
               <button id="copyExtensionPath" class="copy-path" type="button">Copiar carpeta</button>
             </details>
-            <h3>Operaciones reales en Google Photos</h3>
+            <h3>Últimas operaciones en Google Photos</h3>
             <div id="extensionQueue" class="extension-queue"></div>
-          </details>
-        </aside>
-      </section>
+          </section>
+        </div>
+      </details>
 
       <div id="toast" class="toast hidden" role="status"></div>
     </main>

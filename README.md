@@ -8,6 +8,8 @@ rápida, privada y reversible.
 
 - Selección nativa de una carpeta de Windows y escaneo de todas sus subcarpetas.
 - Vista previa de imágenes, videos y audios sin subir los archivos a internet.
+- Interfaz de lectura sencilla, con el contenido grande y centrado y acciones
+  explicadas en pantalla.
 - Flecha izquierda para mover, derecha para conservar, abajo para decidir más
   tarde y arriba para deshacer.
 - Movimiento reversible a `_Photo_Swipper_Filter_Para_Eliminar`, conservando la
@@ -16,6 +18,7 @@ rápida, privada y reversible.
 - Precarga de las siguientes imágenes para reducir la espera.
 - Extensión opcional para revisar elementos abiertos directamente en Google
   Photos y agregarlos a `Fotos a eliminar` o enviarlos a la Papelera.
+- Acceso visible a Google Photos desde la parte superior de la aplicación.
 - Inicio oculto en Windows, apertura automática del navegador y actualización
   segura desde GitHub cuando la rama local no tiene cambios.
 
@@ -91,6 +94,11 @@ biblioteca principal normalmente será una más antigua. En álbumes y búsqueda
 respeta el orden de ese contexto. Google puede cambiar su interfaz; si una
 operación no recibe una confirmación visible, se registra como fallida y no como
 completada.
+
+Una pulsación corta de `→` conserva y garantiza un avance. Si se mantiene
+presionada, se activa el avance rápido y cada foto recorrida se registra como
+conservada. La flecha izquierda no se repite automáticamente porque puede
+producir cambios reales en un álbum o en la Papelera.
 
 ## Estructura del proyecto
 

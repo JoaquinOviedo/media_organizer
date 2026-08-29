@@ -10,6 +10,11 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - Al conservar o descartar en Google Photos, la extensión avanza a la siguiente
   foto —normalmente más antigua en la biblioteca principal— y reconoce más
   variantes del control de navegación.
+- Las pulsaciones cortas de `→` ya no se pierden durante una transición, y
+  mantener la tecla activa un avance rápido controlado que conserva cada foto.
+- El acceso a Google Photos queda visible en la parte superior de la aplicación.
+- La revisión local adopta una interfaz más simple, con exploración de carpetas
+  destacada, visor multimedia grande y centrado, y botones con texto claro.
 - La carpeta para nuevos descartes pasa a llamarse
   `_Photo_Swipper_Filter_Para_Eliminar`.
 - Se conserva compatibilidad con descartes, sesión y perfil de navegador de la

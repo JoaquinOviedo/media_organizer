@@ -176,7 +176,7 @@ function renderFolderStatus() {
   $("discardPath").textContent = folder?.discardPath || "Elegí una carpeta para ver el destino.";
   $("folderCopy").textContent = selected
     ? "La carpeta y todas sus subcarpetas están listas para revisar."
-    : "Se incluirán automáticamente todas sus subcarpetas, sin subir ningún archivo a internet.";
+    : "También vamos a revisar automáticamente sus subcarpetas, sin subir ningún archivo a internet.";
 }
 
 function render() {
@@ -205,8 +205,8 @@ function render() {
     const heading = $("emptyState").querySelector("h2");
     const copy = $("emptyState").querySelector("p");
     if (!state.folder?.selected) {
-      heading.textContent = "Elegí una carpeta para comenzar";
-      copy.textContent = "Podrás revisar fotos, videos y audios de todas sus subcarpetas.";
+      heading.textContent = "Primero explorá una carpeta";
+      copy.textContent = "Después vas a poder mirar imágenes, videos y audios uno por uno.";
     } else if (state.items.length === 0) {
       heading.textContent = "No encontramos archivos compatibles";
       copy.textContent = "Probá con otra carpeta o volvé a escanear después de agregar archivos.";
@@ -257,7 +257,7 @@ async function chooseLocalFolder() {
     toast(error.message, 5200);
   } finally {
     button.disabled = false;
-    button.textContent = "Elegir carpeta";
+    button.textContent = "📁 Explorar carpetas";
   }
 }
 
@@ -274,7 +274,7 @@ async function rescanLocalFolder() {
     toast(error.message, 5200);
   } finally {
     button.disabled = false;
-    button.textContent = "Volver a escanear";
+    button.textContent = "Buscar archivos nuevos";
   }
 }
 
