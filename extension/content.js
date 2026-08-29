@@ -1,6 +1,7 @@
 (() => {
   const ALBUM_NAME = "Fotos a eliminar";
-  const PHOTO_PATH = /^\/photo\/([^/?#]+)/;
+  const PHOTO_PATH = /(?:^|\/)photo\/([^/?#]+)/;
+  const RESUME_STORAGE_KEY = "photoSwipperResumePoint";
   const labels = {
     more: ["More options", "Más opciones"],
     addToAlbum: ["Add to album", "Agregar al álbum", "Añadir al álbum"],
@@ -28,13 +29,111 @@
   let rapidKeepLoopActive = false;
   let rapidReachedEnd = false;
   let queuedKeepCount = 0;
+  let lastSavedPhotoId = null;
+  let suppressedCheckpointId = null;
+  let resumeAttempted = false;
+  let resumeStorageQueue = Promise.resolve();
   const actionHistory = [];
   const MAX_ACTION_HISTORY = 30;
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  function photoIdFromPath(pathname) {
+    return pathname.match(PHOTO_PATH)?.[1] || null;
+  }
+
   function photoId() {
-    return location.pathname.match(PHOTO_PATH)?.[1] || null;
+    return photoIdFromPath(location.pathname);
+  }
+
+  function storageGetResumePoint() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get(RESUME_STORAGE_KEY, (result) => {
+        if (chrome.runtime.lastError) {
+          resolve(null);
+          return;
+        }
+        resolve(result?.[RESUME_STORAGE_KEY] || null);
+      });
+    });
+  }
+
+  function storageSetResumePoint(point) {
+    return new Promise((resolve) => {
+      chrome.storage.local.set({ [RESUME_STORAGE_KEY]: point }, () => {
+        void chrome.runtime.lastError;
+        resolve();
+      });
+    });
+  }
+
+  function storageRemoveResumePoint() {
+    return new Promise((resolve) => {
+      chrome.storage.local.remove(RESUME_STORAGE_KEY, () => {
+        void chrome.runtime.lastError;
+        resolve();
+      });
+    });
+  }
+
+  function enqueueResumeStorage(operation) {
+    resumeStorageQueue = resumeStorageQueue.then(operation, operation);
+    return resumeStorageQueue;
+  }
+
+  function validResumePoint(value) {
+    if (!value || typeof value.id !== "string" || typeof value.url !== "string") return null;
+    try {
+      const url = new URL(value.url);
+      const id = photoIdFromPath(url.pathname);
+      if (url.origin !== location.origin || !id || id !== value.id) return null;
+      return { id, url: url.href, updatedAt: value.updatedAt || null };
+    } catch {
+      return null;
+    }
+  }
+
+  function isLibraryEntryPath() {
+    const path = location.pathname.replace(/^\/u\/\d+(?=\/|$)/, "");
+    return path === "" || path === "/";
+  }
+
+  function rememberCurrentPhoto() {
+    const id = photoId();
+    if (!id || id === lastSavedPhotoId || id === suppressedCheckpointId) return;
+    suppressedCheckpointId = null;
+    lastSavedPhotoId = id;
+    const point = { id, url: location.href, updatedAt: Date.now() };
+    void enqueueResumeStorage(() => storageSetResumePoint(point));
+  }
+
+  function markPhotoProcessed(id) {
+    if (!id) return Promise.resolve();
+    suppressedCheckpointId = id;
+    if (lastSavedPhotoId === id) lastSavedPhotoId = null;
+    return enqueueResumeStorage(async () => {
+      const current = validResumePoint(await storageGetResumePoint());
+      if (current?.id === id) await storageRemoveResumePoint();
+    });
+  }
+
+  async function maybeResumeLastPhoto() {
+    if (resumeAttempted) return;
+    resumeAttempted = true;
+    if (photoId()) {
+      rememberCurrentPhoto();
+      return;
+    }
+    if (!isLibraryEntryPath()) return;
+
+    const stored = await enqueueResumeStorage(() => storageGetResumePoint());
+    const point = validResumePoint(stored);
+    if (!point) {
+      if (stored) await enqueueResumeStorage(() => storageRemoveResumePoint());
+      return;
+    }
+    lastSavedPhotoId = point.id;
+    location.replace(point.url);
   }
 
   function normalized(value) {
@@ -229,6 +328,7 @@
       album.click();
       await waitFor(() => !document.querySelector('[role="dialog"]'), 5000);
       await record("delete", "added", `Agregada a ${ALBUM_NAME}`, media);
+      await markPhotoProcessed(media.id);
       const advanced = await goToOlderPhoto(media.id);
       rememberAction({ kind: "album", media });
       showToast(advanced
@@ -266,6 +366,7 @@
 
       await waitFor(() => statusWithText(labels.movedToTrash), 7000);
 
+      await markPhotoProcessed(media.id);
       rememberAction({ kind: "trash", media });
       void record("delete", "trashed", "Movida a la Papelera", media);
       showToast("Movida a la Papelera de Google Photos.");
@@ -303,13 +404,14 @@
   async function keepCurrentPhoto({ quiet = false } = {}) {
     if (busy || !photoId()) return false;
     setBusy(true);
-    const currentId = photoId();
+    const media = { id: photoId(), url: location.href };
     try {
       await record("keep", "not_needed", "Conservar");
-      const advanced = await goToOlderPhoto(currentId);
+      await markPhotoProcessed(media.id);
+      const advanced = await goToOlderPhoto(media.id);
       if (advanced) rememberAction({
         kind: "keep",
-        media: { id: currentId, url: `${location.origin}/photo/${currentId}` },
+        media,
       });
       if (!quiet) {
         showToast(advanced
@@ -400,6 +502,7 @@
         const currentId = photoId();
         return currentId && currentId !== startingId ? currentId : null;
       }, 3500);
+      rememberCurrentPhoto();
       return true;
     } catch {
       return false;
@@ -562,7 +665,10 @@
   window.addEventListener("keyup", handleKeyboardRelease, true);
 
   const observer = new MutationObserver(() => {
-    if (location.href !== lastUrl) lastUrl = location.href;
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      rememberCurrentPhoto();
+    }
     mountControls();
   });
   function beginWatchingPhotos() {
@@ -572,6 +678,7 @@
     }
     observer.observe(document.documentElement, { childList: true, subtree: true });
     mountControls();
+    void maybeResumeLastPhoto();
   }
 
   beginWatchingPhotos();

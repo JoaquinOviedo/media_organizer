@@ -52,6 +52,12 @@ Google Photos y reporta el resultado al servidor local. No existe una
 sincronización automática y segura entre una decisión del Picker y un elemento
 abierto después en Google Photos.
 
+La posición de revisión se conserva únicamente en el almacenamiento local de
+la extensión como identificador y URL de la foto abierta. Una operación
+confirmada elimina ese punto; al mostrarse la foto siguiente se crea el nuevo.
+La reanudación automática solo se aplica al entrar a la biblioteca principal y
+valida que la URL guardada pertenezca a `photos.google.com`.
+
 ## Compatibilidad histórica
 
 Los identificadores internos `swipeclean:*`, el servicio seguro

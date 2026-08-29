@@ -104,6 +104,13 @@ Después de conservar o descartar, avanza a la siguiente foto; en la biblioteca
 principal normalmente será una más antigua. En álbumes y búsquedas respeta el
 orden de ese contexto.
 
+Mientras una foto está abierta y todavía no fue decidida, la extensión guarda
+localmente su identificador y dirección. Al volver a entrar a la biblioteca
+principal de Google Photos, la abre automáticamente para continuar desde allí.
+Una decisión confirmada elimina ese punto y la foto siguiente pasa a ser el
+nuevo punto de reanudación. La extensión no fuerza esta apertura desde
+Búsqueda, Álbumes, Papelera u otras secciones elegidas por el usuario.
+
 Para una eliminación, `↓` solo actúa mientras Google Photos todavía muestra el
 botón nativo **Deshacer** correspondiente a la última confirmación. Si Google ya
 lo ocultó, la extensión no intenta adivinar: avisa que la foto debe restaurarse

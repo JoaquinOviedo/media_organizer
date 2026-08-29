@@ -13,7 +13,7 @@ class ExtensionFilesTest(unittest.TestCase):
         content = (ROOT / "extension" / "content.js").read_text(encoding="utf-8")
 
         self.assertEqual(manifest["name"], "Photo Swipper Filter para Google Photos")
-        self.assertEqual(manifest["version"], "0.5.0")
+        self.assertEqual(manifest["version"], "0.6.0")
         self.assertEqual(manifest["background"]["service_worker"], "background.js")
         self.assertEqual(manifest["content_scripts"][0]["run_at"], "document_start")
         self.assertIn("http://127.0.0.1:8765/*", manifest["host_permissions"])
@@ -29,12 +29,18 @@ class ExtensionFilesTest(unittest.TestCase):
         self.assertIn('id="swipeclean-undo"', content)
         self.assertIn("event.stopImmediatePropagation()", content)
         self.assertIn('document.querySelectorAll(\'button, [role="button"]\')', content)
-        self.assertIn("goToOlderPhoto(currentId)", content)
+        self.assertIn("goToOlderPhoto(media.id)", content)
         self.assertIn("runRapidKeepLoop", content)
         self.assertIn("queuedKeepCount", content)
         self.assertIn("await waitFor(findOlderNavigationButton, 1800)", content)
         self.assertIn("await waitFor(() => statusWithText(labels.movedToTrash), 7000)", content)
         self.assertIn("Mostrando la siguiente foto, normalmente más antigua", content)
+        self.assertIn('const RESUME_STORAGE_KEY = "photoSwipperResumePoint"', content)
+        self.assertIn("chrome.storage.local", content)
+        self.assertIn("maybeResumeLastPhoto", content)
+        self.assertIn("rememberCurrentPhoto", content)
+        self.assertIn("markPhotoProcessed", content)
+        self.assertIn("location.replace(point.url)", content)
         self.assertNotIn('fetch(`${SERVER}', content)
 
 

@@ -24,6 +24,9 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - La extensión 0.5.0 usa Papelera como destino predeterminado y agrega `↓` para
   deshacer la última eliminación únicamente mediante el aviso nativo y visible
   de Google Photos. Conservar también puede volver a la foto anterior.
+- La extensión 0.6.0 recuerda localmente la última foto que quedó sin decidir y
+  la retoma al volver a la biblioteca principal, sin desviar búsquedas, álbumes
+  ni la Papelera.
 - El registro local de una eliminación ya no bloquea el avance a la foto
   siguiente, manteniendo ágil la revisión.
 - La carpeta para nuevos descartes pasa a llamarse
