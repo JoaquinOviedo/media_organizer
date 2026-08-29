@@ -32,8 +32,14 @@ destino sigan dentro de ella.
 
 - `pending`: todavía no revisado.
 - `keep`: permanece en su ubicación.
-- `later`: se oculta temporalmente de la ronda principal.
 - `delete`: se mueve a la carpeta para eliminar, sin borrado definitivo.
+- `organize`: se mueve a la carpeta de organización activa.
+
+Las carpetas de organización son subcarpetas directas de la biblioteca. La
+selección activa se persiste por biblioteca y esos destinos se excluyen del
+escaneo recursivo para evitar reimportar archivos ya ordenados. Tanto `delete`
+como `organize` conservan la ruta relativa original para que la siguiente
+operación de deshacer pueda restaurar el archivo.
 
 SQLite almacena rutas, metadatos y decisiones. Los archivos multimedia no se
 copian a la base ni se envían a un servidor remoto.

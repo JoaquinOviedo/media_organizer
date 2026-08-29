@@ -78,6 +78,65 @@ class LocalMediaLibraryTest(unittest.TestCase):
         self.assertEqual(status["total"], 1)
         self.assertEqual(self.library.list_items()[0]["filename"], "conservar.jpg")
 
+    def test_organize_moves_to_selected_folder_and_pending_restores(self):
+        source_folder = self.root / "sin ordenar"
+        source_folder.mkdir()
+        original = source_folder / "cumple.jpg"
+        original.write_bytes(b"photo")
+        self.library.scan(self.root)
+        item = self.library.list_items()[0]
+
+        folders = self.library.create_organize_folder("Familia")
+        moved = self.library.decide(
+            item["item_id"],
+            "organize",
+            destination_relative_path=folders["selected"],
+        )
+
+        self.assertFalse(original.exists())
+        self.assertEqual(Path(moved["current_path"]).parent, self.root / "Familia")
+        self.assertEqual(moved["decision"], "organize")
+
+        status = self.library.scan(self.root)
+        self.assertEqual(status["total"], 1)
+        self.assertEqual(self.library.list_items()[0]["decision"], "organize")
+
+        restored = self.library.decide(item["item_id"], "pending")
+        self.assertTrue(original.exists())
+        self.assertEqual(Path(restored["current_path"]).resolve(), original.resolve())
+
+    def test_created_organize_folders_are_saved_and_preselected(self):
+        self.library.scan(self.root)
+
+        first = self.library.create_organize_folder("Familia")
+        second = self.library.create_organize_folder("Viajes")
+        selected = self.library.select_organize_folder("Familia")
+
+        self.assertEqual(first["selected"], "Familia")
+        self.assertEqual(second["selected"], "Viajes")
+        self.assertEqual(selected["selected"], "Familia")
+        self.assertEqual(
+            {folder["name"] for folder in selected["folders"]},
+            {"Familia", "Viajes"},
+        )
+
+    def test_organize_folder_name_cannot_escape_the_library(self):
+        self.library.scan(self.root)
+
+        with self.assertRaises(ValueError):
+            self.library.create_organize_folder("../afuera")
+
+    def test_old_later_decisions_return_to_the_pending_queue(self):
+        original = self.root / "pendiente.jpg"
+        original.write_bytes(b"photo")
+        self.library.scan(self.root)
+        item = self.library.list_items()[0]
+        self.store.update_local_media(item["item_id"], "later")
+
+        reopened = MvpStore(self.store.database_path)
+
+        self.assertEqual(reopened.get_local_media(item["item_id"])["decision"], "pending")
+
 
 if __name__ == "__main__":
     unittest.main()

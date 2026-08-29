@@ -12,8 +12,10 @@ rápida, privada y reversible.
   explicadas en pantalla.
 - Visor adaptable a la orientación vertical, horizontal o cuadrada de cada
   foto y video, siempre mostrando el contenido completo.
-- Flecha izquierda para mover, derecha para conservar, abajo para decidir más
-  tarde y arriba para deshacer.
+- Flecha izquierda para eliminar, derecha para conservar, arriba para ordenar
+  en la carpeta activa y abajo para deshacer la última decisión.
+- Creación de carpetas de organización desde la aplicación, con una carpeta
+  activa que queda guardada y puede cambiarse en cualquier momento.
 - Movimiento reversible a `_Photo_Swipper_Filter_Para_Eliminar`, conservando la
   estructura original de subcarpetas.
 - Historial y progreso guardados localmente en SQLite.
@@ -29,17 +31,22 @@ rápida, privada y reversible.
 1. Ejecutá `iniciar_mvp.bat`.
 2. Esperá a que se abra Microsoft Edge en `http://127.0.0.1:8765`.
 3. Elegí la carpeta principal que querés ordenar.
-4. Revisá los archivos con las flechas:
+4. Creá o seleccioná la carpeta que querés usar para ordenar con `↑`.
+5. Revisá los archivos con las flechas:
 
 | Tecla | Acción |
 | --- | --- |
 | `←` | Mover a la carpeta para eliminar |
 | `→` | Conservar en su ubicación |
-| `↓` | Dejar para después |
-| `↑` | Deshacer la última decisión |
+| `↑` | Mover a la carpeta de organización activa |
+| `↓` | Deshacer y volver al archivo anterior |
 
 Nada se elimina definitivamente. Antes del borrado final, revisá la carpeta
 `_Photo_Swipper_Filter_Para_Eliminar`.
+
+La carpeta mostrada como **activa para la flecha ↑** continúa seleccionada
+hasta que elijas o crees otra. Las carpetas creadas por la aplicación quedan
+dentro de la biblioteca principal y no se vuelven a incluir en el escaneo.
 
 Para crear o actualizar el acceso directo del Escritorio:
 

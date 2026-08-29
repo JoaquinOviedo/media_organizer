@@ -144,6 +144,31 @@ def rescan_local_folder():
         return jsonify({"error": str(error)}), 400
 
 
+@app.get("/api/local/organize-folders")
+def local_organize_folders():
+    return jsonify(local_library.organize_folders())
+
+
+@app.post("/api/local/organize-folders")
+def create_local_organize_folder():
+    payload = request.get_json(silent=True) or {}
+    try:
+        return jsonify(local_library.create_organize_folder(payload.get("name", "")))
+    except (OSError, ValueError) as error:
+        return jsonify({"error": str(error)}), 400
+
+
+@app.post("/api/local/organize-folders/select")
+def select_local_organize_folder():
+    payload = request.get_json(silent=True) or {}
+    try:
+        return jsonify(
+            local_library.select_organize_folder(payload.get("relativePath", ""))
+        )
+    except (OSError, ValueError) as error:
+        return jsonify({"error": str(error)}), 400
+
+
 @app.get("/api/local/media")
 def local_media_items():
     return jsonify({"items": local_library.list_items()})
@@ -189,7 +214,11 @@ def local_media_content(item_id: str):
 def local_media_decision(item_id: str):
     payload = request.get_json(silent=True) or {}
     try:
-        item = local_library.decide(item_id, payload.get("decision", ""))
+        item = local_library.decide(
+            item_id,
+            payload.get("decision", ""),
+            destination_relative_path=payload.get("destinationRelativePath"),
+        )
     except FileNotFoundError as error:
         return jsonify({"error": str(error)}), 404
     except (OSError, ValueError) as error:

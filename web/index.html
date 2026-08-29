@@ -43,11 +43,31 @@
         </div>
       </section>
 
+      <section id="organizePanel" class="panel organize-panel hidden">
+        <div class="step-number secondary" aria-hidden="true">2</div>
+        <div class="organize-copy">
+          <p class="organize-label">CARPETA ACTIVA PARA LA FLECHA ↑</p>
+          <h2 id="selectedDestinationLabel">Todavía no elegiste una carpeta</h2>
+          <p id="destinationHelp">Creá una carpeta o elegí una de la lista. La selección queda guardada para las próximas fotos.</p>
+        </div>
+        <div class="organize-actions">
+          <label for="destinationFolderSelect">Carpetas guardadas</label>
+          <select id="destinationFolderSelect">
+            <option value="">Elegir carpeta…</option>
+          </select>
+          <div class="new-folder-row">
+            <label class="sr-only" for="newFolderName">Nombre de la carpeta nueva</label>
+            <input id="newFolderName" type="text" maxlength="80" placeholder="Ejemplo: Vacaciones" autocomplete="off" />
+            <button id="createDestinationFolderButton" class="button organize" type="button">Crear y usar</button>
+          </div>
+        </div>
+      </section>
+
       <section class="stats panel" aria-label="Progreso de la revisión">
         <div><strong id="pendingCount">0</strong><span>Por revisar</span></div>
         <div><strong id="keepCount">0</strong><span>Conservados</span></div>
         <div><strong id="deleteCount">0</strong><span>Para eliminar</span></div>
-        <div><strong id="laterCount">0</strong><span>Para después</span></div>
+        <div><strong id="organizeCount">0</strong><span>Ordenados</span></div>
       </section>
 
       <section class="workspace">
@@ -56,7 +76,6 @@
             <div class="empty-icon">📁</div>
             <h2>Primero explorá una carpeta</h2>
             <p>Después vas a poder mirar cada foto, video o audio bien grande en esta pantalla.</p>
-            <button id="reviewLaterButton" class="button ghost hidden" type="button">Revisar los de después</button>
           </div>
 
           <article id="card" class="media-card hidden" aria-live="polite">
@@ -79,24 +98,27 @@
             </div>
           </article>
 
-          <div id="controlsBar" class="controls hidden">
+          <div id="controlsBar" class="controls decision-grid hidden">
             <button id="deleteButton" class="decision-button danger" aria-label="Mover a la carpeta para eliminar">
               <span class="decision-icon">←</span>
-              <span><strong>Mover</strong><small>para eliminar</small></span>
+              <span><strong>Eliminar</strong><small>mover a revisión</small></span>
             </button>
-            <button id="laterButton" class="decision-button neutral" aria-label="Decidir después">
-              <span class="decision-icon">⌛</span>
-              <span><strong>Después</strong><small>decidir más tarde</small></span>
+            <button id="organizeButton" class="decision-button organize" aria-label="Mover a la carpeta de organización elegida">
+              <span class="decision-icon">↑</span>
+              <span><strong>Ordenar</strong><small id="organizeButtonDestination">elegí una carpeta</small></span>
             </button>
             <button id="keepButton" class="decision-button success" aria-label="Conservar en su lugar">
               <span><strong>Conservar</strong><small>dejar en su lugar</small></span>
               <span class="decision-icon">→</span>
             </button>
+            <button id="undoButton" class="decision-button undo-decision" aria-label="Deshacer la última decisión" disabled>
+              <span class="decision-icon">↓</span>
+              <span><strong>Deshacer</strong><small>volver al anterior</small></span>
+            </button>
           </div>
-          <button id="undoButton" class="undo hidden" disabled>↶ Deshacer la última decisión</button>
           <p id="keyboardHelp" class="keyboard-help hidden" aria-label="Atajos de teclado">
-            También podés usar el teclado: <kbd>←</kbd> mover · <kbd>→</kbd> conservar ·
-            <kbd>↓</kbd> después · <kbd>↑</kbd> deshacer
+            Teclado: <kbd>←</kbd> eliminar · <kbd>→</kbd> conservar ·
+            <kbd>↑</kbd> ordenar en la carpeta activa · <kbd>↓</kbd> deshacer
           </p>
         </section>
       </section>

@@ -78,7 +78,22 @@ class MvpStore:
 
                 CREATE INDEX IF NOT EXISTS idx_local_media_root
                 ON local_media_items(root_path, available, decision);
+
+                CREATE TABLE IF NOT EXISTS local_organize_folders (
+                    root_path TEXT NOT NULL,
+                    relative_path TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    selected INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (root_path, relative_path)
+                );
                 """
+            )
+            # "Después" dejó de ser una decisión del flujo local. Los archivos
+            # históricos vuelven a la cola sin mover nada en el disco.
+            connection.execute(
+                "UPDATE local_media_items SET decision = 'pending' WHERE decision = 'later'"
             )
 
     def upsert_picker_items(self, session_id: str, items: list[dict[str, Any]]) -> None:
@@ -203,7 +218,11 @@ class MvpStore:
                 (root_path, discard_path),
             )
             connection.execute(
-                "UPDATE local_media_items SET available = 0 WHERE root_path = ? AND decision != 'delete'",
+                """
+                UPDATE local_media_items
+                SET available = 0
+                WHERE root_path = ? AND decision NOT IN ('delete', 'organize')
+                """,
                 (root_path,),
             )
             for item in items:
@@ -242,19 +261,81 @@ class MvpStore:
                     ),
                 )
 
-            deleted = connection.execute(
+            moved = connection.execute(
                 """
                 SELECT item_id, current_path
                 FROM local_media_items
-                WHERE root_path = ? AND decision = 'delete'
+                WHERE root_path = ? AND decision IN ('delete', 'organize')
                 """,
                 (root_path,),
             ).fetchall()
-            for row in deleted:
+            for row in moved:
                 connection.execute(
                     "UPDATE local_media_items SET available = ? WHERE item_id = ?",
                     (1 if Path(row["current_path"]).is_file() else 0, row["item_id"]),
                 )
+
+    def list_local_organize_folders(self, root_path: str) -> list[dict[str, Any]]:
+        with self._connection() as connection:
+            rows = connection.execute(
+                """
+                SELECT relative_path, name, selected
+                FROM local_organize_folders
+                WHERE root_path = ?
+                ORDER BY selected DESC, name COLLATE NOCASE
+                """,
+                (root_path,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def save_local_organize_folder(
+        self,
+        root_path: str,
+        relative_path: str,
+        name: str,
+    ) -> None:
+        with self._connection() as connection:
+            connection.execute(
+                "UPDATE local_organize_folders SET selected = 0 WHERE root_path = ?",
+                (root_path,),
+            )
+            connection.execute(
+                """
+                INSERT INTO local_organize_folders (
+                    root_path, relative_path, name, selected
+                ) VALUES (?, ?, ?, 1)
+                ON CONFLICT(root_path, relative_path) DO UPDATE SET
+                    name = excluded.name,
+                    selected = 1,
+                    updated_at = CURRENT_TIMESTAMP
+                """,
+                (root_path, relative_path, name),
+            )
+
+    def select_local_organize_folder(self, root_path: str, relative_path: str) -> bool:
+        with self._connection() as connection:
+            exists = connection.execute(
+                """
+                SELECT 1 FROM local_organize_folders
+                WHERE root_path = ? AND relative_path = ?
+                """,
+                (root_path, relative_path),
+            ).fetchone()
+            if not exists:
+                return False
+            connection.execute(
+                "UPDATE local_organize_folders SET selected = 0 WHERE root_path = ?",
+                (root_path,),
+            )
+            connection.execute(
+                """
+                UPDATE local_organize_folders
+                SET selected = 1, updated_at = CURRENT_TIMESTAMP
+                WHERE root_path = ? AND relative_path = ?
+                """,
+                (root_path, relative_path),
+            )
+        return True
 
     def get_local_library(self) -> dict[str, Any] | None:
         with self._connection() as connection:

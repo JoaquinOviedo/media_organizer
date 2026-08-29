@@ -20,6 +20,18 @@ class WebFilesTest(unittest.TestCase):
         self.assertIn(".media-card.media-square", styles)
         self.assertIn("object-fit: contain", styles)
 
+    def test_keyboard_flow_includes_organize_and_undo(self):
+        app = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
+        page = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+
+        self.assertIn('ArrowLeft: () => decide("delete")', app)
+        self.assertIn('ArrowRight: () => decide("keep")', app)
+        self.assertIn('ArrowUp: () => decide("organize")', app)
+        self.assertIn("ArrowDown: undo", app)
+        self.assertIn('id="destinationFolderSelect"', page)
+        self.assertIn('id="newFolderName"', page)
+        self.assertIn('id="organizeButton"', page)
+
 
 if __name__ == "__main__":
     unittest.main()

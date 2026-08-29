@@ -17,6 +17,10 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
   destacada, visor multimedia grande y centrado, y botones con texto claro.
 - El visor cambia automáticamente de forma para aprovechar mejor la pantalla
   con fotos y videos verticales, horizontales o cuadrados, sin recortarlos.
+- Se pueden crear y guardar carpetas de organización dentro de la biblioteca.
+  La flecha `↑` mueve a la carpeta activa y `↓` deshace la decisión anterior.
+- Las carpetas de organización se excluyen del escaneo para que los archivos ya
+  ordenados no vuelvan a la cola.
 - La carpeta para nuevos descartes pasa a llamarse
   `_Photo_Swipper_Filter_Para_Eliminar`.
 - Se conserva compatibilidad con descartes, sesión y perfil de navegador de la

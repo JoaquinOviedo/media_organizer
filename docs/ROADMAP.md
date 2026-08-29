@@ -5,7 +5,7 @@ Este documento orienta cambios futuros; no representa compromisos ni fechas.
 ## Próximos pasos
 
 - Filtros por tipo, fecha, tamaño y subcarpeta antes de comenzar una ronda.
-- Mejor navegación de la cola de archivos marcados para después.
+- Administración opcional de carpetas de organización antiguas o sin uso.
 - Detección de archivos que fueron movidos o renombrados fuera de la aplicación.
 - Instalador o actualización más sencilla de la extensión y el acceso directo.
 - Pruebas integrales del inicio oculto y de la restauración en Windows.
