@@ -27,6 +27,9 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - La extensión 0.6.0 recuerda localmente la última foto que quedó sin decidir y
   la retoma al volver a la biblioteca principal, sin desviar búsquedas, álbumes
   ni la Papelera.
+- La extensión 0.6.1 muestra Papelera explícitamente como destino predeterminado
+  y recarga las pestañas abiertas de Google Photos al instalarse o actualizarse,
+  evitando que sigan ejecutando una versión anterior del asistente.
 - El registro local de una eliminación ya no bloquea el avance a la foto
   siguiente, manteniendo ágil la revisión.
 - La carpeta para nuevos descartes pasa a llamarse

@@ -571,8 +571,8 @@
       <label class="swipeclean-mode-label">
         Destino
         <select id="swipeclean-mode" aria-label="Destino del descarte">
+          <option value="trash" selected>Papelera (predeterminado)</option>
           <option value="album">Álbum</option>
-          <option value="trash" selected>Papelera</option>
         </select>
       </label>
       <button id="swipeclean-delete" type="button">← Papelera</button>

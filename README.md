@@ -100,6 +100,8 @@ de Edge. Si necesitás cargarla manualmente:
 La extensión usa las flechas dentro de una foto o video abierto. Por defecto,
 `←` envía a la **Papelera**, `→` conserva y avanza, y `↓` intenta deshacer la
 última acción. El modo álbum continúa disponible como alternativa manual.
+Al instalarla, actualizarla o usar **Volver a cargar**, las pestañas abiertas de
+Google Photos se recargan una vez para recibir inmediatamente esta configuración.
 Después de conservar o descartar, avanza a la siguiente foto; en la biblioteca
 principal normalmente será una más antigua. En álbumes y búsquedas respeta el
 orden de ese contexto.
