@@ -97,12 +97,22 @@ de Edge. Si necesitás cargarla manualmente:
 3. Elegí **Cargar extensión sin empaquetar**.
 4. Seleccioná la carpeta `extension` de este repositorio.
 
-La extensión usa las flechas izquierda y derecha dentro de una foto o video
-abierto. Después de conservar o descartar, avanza a la siguiente foto; en la
-biblioteca principal normalmente será una más antigua. En álbumes y búsquedas
-respeta el orden de ese contexto. Google puede cambiar su interfaz; si una
-operación no recibe una confirmación visible, se registra como fallida y no como
-completada.
+La extensión usa las flechas dentro de una foto o video abierto. Por defecto,
+`←` envía a la **Papelera**, `→` conserva y avanza, y `↓` intenta deshacer la
+última acción. El modo álbum continúa disponible como alternativa manual.
+Después de conservar o descartar, avanza a la siguiente foto; en la biblioteca
+principal normalmente será una más antigua. En álbumes y búsquedas respeta el
+orden de ese contexto.
+
+Para una eliminación, `↓` solo actúa mientras Google Photos todavía muestra el
+botón nativo **Deshacer** correspondiente a la última confirmación. Si Google ya
+lo ocultó, la extensión no intenta adivinar: avisa que la foto debe restaurarse
+manualmente desde Papelera. Al deshacer una foto conservada, vuelve a abrir esa
+foto. Agregar a un álbum no se revierte automáticamente porque Google Photos no
+ofrece una confirmación suficientemente segura para esa operación.
+
+Google puede cambiar su interfaz; si una operación no recibe una confirmación
+visible, se registra como fallida y no como completada.
 
 Una pulsación corta de `→` conserva y garantiza un avance. Si se mantiene
 presionada, se activa el avance rápido y cada foto recorrida se registra como

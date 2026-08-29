@@ -21,6 +21,11 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
   La flecha `↑` mueve a la carpeta activa y `↓` deshace la decisión anterior.
 - Las carpetas de organización se excluyen del escaneo para que los archivos ya
   ordenados no vuelvan a la cola.
+- La extensión 0.5.0 usa Papelera como destino predeterminado y agrega `↓` para
+  deshacer la última eliminación únicamente mediante el aviso nativo y visible
+  de Google Photos. Conservar también puede volver a la foto anterior.
+- El registro local de una eliminación ya no bloquea el avance a la foto
+  siguiente, manteniendo ágil la revisión.
 - La carpeta para nuevos descartes pasa a llamarse
   `_Photo_Swipper_Filter_Para_Eliminar`.
 - Se conserva compatibilidad con descartes, sesión y perfil de navegador de la

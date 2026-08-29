@@ -534,7 +534,13 @@ async function loadExtensionQueue() {
   for (const item of payload.items.slice(0, 8)) {
     const row = document.createElement("div");
     row.className = `queue-item ${item.album_status}`;
-    const icon = item.album_status === "added" ? "✓" : item.album_status === "trashed" ? "🗑" : "!";
+    const icon = item.album_status === "added"
+      ? "✓"
+      : item.album_status === "trashed"
+        ? "🗑"
+        : ["restored", "undone"].includes(item.album_status)
+          ? "↶"
+          : "!";
     row.textContent = `${icon} ${item.photo_id.slice(0, 18)} · ${item.message || item.album_status}`;
     root.appendChild(row);
   }

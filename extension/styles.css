@@ -48,6 +48,7 @@
 #swipeclean-controls[data-mode="trash"] { border-color: rgba(255, 100, 130, .6); background: rgba(55, 12, 24, .94); }
 #swipeclean-controls[data-mode="trash"] #swipeclean-delete { background: #b91c3c; }
 #swipeclean-keep { background: #16865e; }
+#swipeclean-undo { background: #334155; }
 #swipeclean-prepare { background: rgba(255,255,255,.12); }
 #swipeclean-controls button:disabled { opacity: .48; cursor: wait; }
 #swipeclean-controls select:disabled { opacity: .48; cursor: wait; }

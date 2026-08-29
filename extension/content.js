@@ -6,6 +6,12 @@
     addToAlbum: ["Add to album", "Agregar al álbum", "Añadir al álbum"],
     moveToTrash: ["Move to trash", "Move to bin", "Mover a la papelera"],
     movedToTrash: ["Moved to trash", "Moved to bin", "Movido a la papelera", "Se movió a la papelera"],
+    undo: ["Undo", "Deshacer"],
+    restored: [
+      "Restored", "Item restored", "Photo restored",
+      "Restaurado", "Restaurada", "Elemento restaurado", "Foto restaurada",
+      "Se restauró", "Se ha restaurado", "Se restableció",
+    ],
     close: ["Close", "Cerrar"],
     next: [
       "View next photo", "Next photo", "Next image", "Next item",
@@ -15,13 +21,15 @@
   };
 
   let busy = false;
-  let discardMode = "album";
+  let discardMode = "trash";
   let gestureStart = null;
   let lastUrl = location.href;
   let rightKeyHeld = false;
   let rapidKeepLoopActive = false;
   let rapidReachedEnd = false;
   let queuedKeepCount = 0;
+  const actionHistory = [];
+  const MAX_ACTION_HISTORY = 30;
 
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -52,6 +60,23 @@
         const name = accessibleName(element);
         return expected.includes(normalized(name));
       });
+  }
+
+  function statusWithText(candidates) {
+    const expected = candidates.map(normalized);
+    return [...document.querySelectorAll('[role="status"], [role="alert"]')]
+      .reverse()
+      .find((element) => expected.some((label) => normalized(element.textContent).includes(label)));
+  }
+
+  function visibleTrashUndoButton() {
+    const status = statusWithText(labels.movedToTrash);
+    if (!status) return null;
+    return [...status.querySelectorAll('button, [role="button"]')]
+      .find((button) => labels.undo.some((label) => {
+        const name = accessibleName(button);
+        return normalized(name) === normalized(label) || normalized(name).includes(normalized(label));
+      })) || null;
   }
 
   function findOlderNavigationButton() {
@@ -103,7 +128,26 @@
     document.querySelectorAll("#swipeclean-controls button, #swipeclean-controls select").forEach((control) => {
       control.disabled = value;
     });
+    updateUndoControl();
     if (!value) window.queueMicrotask(flushQueuedKeep);
+  }
+
+  function updateUndoControl() {
+    const undo = document.getElementById("swipeclean-undo");
+    if (!undo) return;
+    undo.disabled = busy || actionHistory.length === 0;
+    const latest = actionHistory.at(-1);
+    undo.title = latest?.kind === "trash"
+      ? "Restaurar la última foto mientras Google muestre Deshacer"
+      : latest?.kind === "keep"
+        ? "Volver a la última foto conservada"
+        : "La última acción no se puede deshacer automáticamente";
+  }
+
+  function rememberAction(action) {
+    actionHistory.push(action);
+    if (actionHistory.length > MAX_ACTION_HISTORY) actionHistory.shift();
+    updateUndoControl();
   }
 
   function sendToSwipeClean(type, payload = null) {
@@ -186,6 +230,7 @@
       await waitFor(() => !document.querySelector('[role="dialog"]'), 5000);
       await record("delete", "added", `Agregada a ${ALBUM_NAME}`, media);
       const advanced = await goToOlderPhoto(media.id);
+      rememberAction({ kind: "album", media });
       showToast(advanced
         ? `Agregada a “${ALBUM_NAME}”. Mostrando la siguiente foto, normalmente más antigua.`
         : `Agregada a “${ALBUM_NAME}”, pero no encontré la siguiente foto.`);
@@ -219,13 +264,10 @@
         confirmation.click();
       }
 
-      await waitFor(() => {
-        if (photoId() !== media.id) return true;
-        return [...document.querySelectorAll('[role="status"], [role="alert"]')]
-          .some((element) => labels.movedToTrash.some((label) => normalized(element.textContent).includes(normalized(label))));
-      }, 7000);
+      await waitFor(() => statusWithText(labels.movedToTrash), 7000);
 
-      await record("delete", "trashed", "Movida a la Papelera", media);
+      rememberAction({ kind: "trash", media });
+      void record("delete", "trashed", "Movida a la Papelera", media);
       showToast("Movida a la Papelera de Google Photos.");
       if (photoId() === media.id) await goToOlderPhoto(media.id);
     } catch (error) {
@@ -265,12 +307,80 @@
     try {
       await record("keep", "not_needed", "Conservar");
       const advanced = await goToOlderPhoto(currentId);
+      if (advanced) rememberAction({
+        kind: "keep",
+        media: { id: currentId, url: `${location.origin}/photo/${currentId}` },
+      });
       if (!quiet) {
         showToast(advanced
           ? "Marcada para conservar. Mostrando la siguiente foto, normalmente más antigua."
           : "Marcada para conservar, pero no encontré la siguiente foto.");
       }
       return advanced;
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function undoLastAction() {
+    if (busy) return;
+    const latest = actionHistory.at(-1);
+    if (!latest) {
+      showToast("Todavía no hay una acción para deshacer.");
+      return;
+    }
+    if (latest.kind === "album") {
+      showToast(
+        `Google Photos no ofrece un Deshacer seguro para quitar la foto de “${ALBUM_NAME}”.`,
+        "error",
+      );
+      return;
+    }
+
+    setBusy(true);
+    try {
+      if (latest.kind === "keep") {
+        actionHistory.pop();
+        await record("pending", "undone", "Conservar deshecho", latest.media);
+        location.assign(latest.media.url);
+        return;
+      }
+
+      const undo = visibleTrashUndoButton();
+      if (!undo) {
+        showToast(
+          "Google Photos ya ocultó Deshacer. La foto sigue en Papelera y podés restaurarla manualmente.",
+          "error",
+        );
+        return;
+      }
+
+      actionHistory.pop();
+      undo.click();
+      const confirmed = await waitFor(
+        () => statusWithText(labels.restored) || (photoId() === latest.media.id ? latest.media.id : null),
+        4500,
+      )
+        .catch(() => null);
+      if (!confirmed) {
+        await record(
+          "delete",
+          "failed",
+          "Google recibió Deshacer, pero no mostró una confirmación de restauración.",
+          latest.media,
+        );
+        showToast(
+          "Se pulsó Deshacer, pero Google Photos no confirmó la restauración. Revisá Papelera.",
+          "error",
+        );
+        return;
+      }
+
+      await record("pending", "restored", "Restaurada desde Papelera", latest.media);
+      showToast("Última foto restaurada. Volviendo a ella.");
+      if (photoId() !== latest.media.id) {
+        window.setTimeout(() => location.assign(latest.media.url), 350);
+      }
     } finally {
       setBusy(false);
     }
@@ -359,16 +469,21 @@
         Destino
         <select id="swipeclean-mode" aria-label="Destino del descarte">
           <option value="album">Álbum</option>
-          <option value="trash">Papelera</option>
+          <option value="trash" selected>Papelera</option>
         </select>
       </label>
-      <button id="swipeclean-delete" type="button">← Álbum</button>
+      <button id="swipeclean-delete" type="button">← Papelera</button>
       <button id="swipeclean-prepare" type="button">Preparar álbum</button>
       <button id="swipeclean-keep" type="button" title="Conservar y avanzar a la siguiente foto, normalmente más antigua">Conservar →</button>
+      <button id="swipeclean-undo" type="button" disabled>↓ Deshacer</button>
     `;
     const mode = controls.querySelector("#swipeclean-mode");
     const discard = controls.querySelector("#swipeclean-delete");
     const prepare = controls.querySelector("#swipeclean-prepare");
+    mode.value = discardMode;
+    controls.dataset.mode = discardMode;
+    discard.textContent = discardMode === "trash" ? "← Papelera" : "← Álbum";
+    prepare.hidden = discardMode === "trash";
     mode.addEventListener("change", () => {
       if (mode.value === "trash") {
         const accepted = window.confirm(
@@ -388,7 +503,9 @@
     discard.addEventListener("click", discardCurrentPhoto);
     controls.querySelector("#swipeclean-prepare").addEventListener("click", prepareAlbum);
     controls.querySelector("#swipeclean-keep").addEventListener("click", requestKeepCurrentPhoto);
+    controls.querySelector("#swipeclean-undo").addEventListener("click", undoLastAction);
     document.body.appendChild(controls);
+    updateUndoControl();
   }
 
   document.addEventListener("pointerdown", (event) => {
@@ -410,11 +527,15 @@
     if (!photoId() || event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.target instanceof Element
       && event.target.closest("input, textarea, select, video, [contenteditable='true']")) return;
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    if (!["ArrowLeft", "ArrowRight", "ArrowDown"].includes(event.key)) return;
 
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
+    if (event.key === "ArrowDown") {
+      if (!event.repeat) void undoLastAction();
+      return;
+    }
     if (event.key === "ArrowLeft") {
       // No repetir automáticamente una operación que puede terminar en álbum o
       // Papelera. La repetición rápida está reservada para conservar.

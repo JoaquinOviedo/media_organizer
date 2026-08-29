@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Photo Swipper Filter para Google Photos",
-  "version": "0.4.2",
-  "description": "Revisa fotos y videos con flechas o gestos y agrega los descartes a Fotos a eliminar.",
+  "version": "0.5.0",
+  "description": "Revisa fotos y videos con flechas, envía descartes a Papelera y permite deshacer la última acción.",
   "permissions": ["storage"],
   "host_permissions": [
     "https://photos.google.com/*",

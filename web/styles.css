@@ -406,7 +406,7 @@ kbd { display: inline-grid; min-width: 28px; height: 26px; place-items: center; 
 .local-delete-item strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.82rem; }
 .local-delete-item span { margin-top: 3px; color: var(--muted); font-size: 0.74rem; }
 .queue-item { padding: 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.04); font-size: 0.8rem; overflow-wrap: anywhere; }
-.queue-item.ok, .queue-item.added { border-left: 3px solid var(--success); }
+.queue-item.ok, .queue-item.added, .queue-item.restored, .queue-item.undone { border-left: 3px solid var(--success); }
 .queue-item.trashed, .queue-item.pending, .queue-item.failed { border-left: 3px solid var(--danger); }
 
 .toast { position: fixed; left: 50%; bottom: 24px; z-index: 20; transform: translateX(-50%); max-width: min(90vw, 680px); padding: 13px 19px; border-radius: 12px; background: #f7f8fc; color: #101526; box-shadow: 0 16px 40px rgba(0,0,0,.35); text-align: center; }
