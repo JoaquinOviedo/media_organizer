@@ -43,6 +43,18 @@ class WebFilesTest(unittest.TestCase):
         self.assertNotIn("Últimas operaciones en Google Photos", page)
         self.assertNotIn("extensionQueue", app)
 
+    def test_theme_toggle_and_clock_are_available(self):
+        app = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
+        page = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+        styles = (ROOT / "web" / "styles.css").read_text(encoding="utf-8")
+
+        self.assertIn('id="currentTime"', page)
+        self.assertIn('id="themeToggle"', page)
+        self.assertIn('id="themeLabel">Modo claro', page)
+        self.assertIn('const THEME_STORAGE_KEY = "photoSwipperTheme"', app)
+        self.assertIn('window.setInterval(updateClock, 30_000)', app)
+        self.assertIn(':root[data-theme="light"]', styles)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -13,6 +13,45 @@ const state = {
 const $ = (id) => document.getElementById(id);
 const card = $("card");
 const MEDIA_LAYOUT_CLASSES = ["media-landscape", "media-portrait", "media-square", "media-audio"];
+const THEME_STORAGE_KEY = "photoSwipperTheme";
+
+function applyTheme(theme) {
+  const selectedTheme = theme === "light" ? "light" : "dark";
+  document.documentElement.dataset.theme = selectedTheme;
+  localStorage.setItem(THEME_STORAGE_KEY, selectedTheme);
+  $("themeToggle").setAttribute("aria-pressed", String(selectedTheme === "light"));
+  $("themeIcon").textContent = selectedTheme === "light" ? "☾" : "☀";
+  $("themeLabel").textContent = selectedTheme === "light" ? "Modo oscuro" : "Modo claro";
+}
+
+function installTheme() {
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const preferredTheme = window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  applyTheme(savedTheme === "light" || savedTheme === "dark" ? savedTheme : preferredTheme);
+  $("themeToggle").addEventListener("click", () => {
+    applyTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+  });
+}
+
+function updateClock() {
+  const now = new Date();
+  const clock = $("currentTime");
+  clock.textContent = new Intl.DateTimeFormat("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(now);
+  clock.dateTime = now.toISOString();
+  clock.title = new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "full",
+    timeStyle: "short",
+  }).format(now);
+}
+
+function installClock() {
+  updateClock();
+  window.setInterval(updateClock, 30_000);
+}
 
 function setMediaLayout(width, height, kind = "visual") {
   card.classList.remove(...MEDIA_LAYOUT_CLASSES);
@@ -534,4 +573,6 @@ $("destinationFolderSelect").addEventListener("change", (event) => {
 });
 installDrag();
 installKeyboard();
+installTheme();
+installClock();
 loadLocalLibrary().catch((error) => toast(error.message, 5200));

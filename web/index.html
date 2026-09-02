@@ -15,6 +15,13 @@
           <p class="tagline">Revisá tus recuerdos de a uno, sin borrar nada por accidente.</p>
         </div>
         <div class="topbar-actions">
+          <div class="display-preferences" aria-label="Hora y apariencia">
+            <time id="currentTime" class="current-time" aria-label="Hora actual">--:--</time>
+            <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">
+              <span id="themeIcon" class="theme-icon" aria-hidden="true">☀</span>
+              <span id="themeLabel">Modo claro</span>
+            </button>
+          </div>
           <span id="folderBadge" class="badge">Sin carpeta elegida</span>
           <a class="google-photos-button" href="https://photos.google.com/" target="_blank" rel="noreferrer">
             <span class="google-photos-icon" aria-hidden="true">✦</span>
