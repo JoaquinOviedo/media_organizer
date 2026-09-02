@@ -21,6 +21,8 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
   La flecha `↑` mueve a la carpeta activa y `↓` deshace la decisión anterior.
 - Las carpetas de organización se excluyen del escaneo para que los archivos ya
   ordenados no vuelvan a la cola.
+- La tecla `I` conserva la imagen actual y crea una copia en `A imprimir`.
+  La carpeta se excluye del escaneo y `↓` elimina la copia de la última acción.
 - La extensión 0.5.0 usa Papelera como destino predeterminado y agrega `↓` para
   deshacer la última eliminación únicamente mediante el aviso nativo y visible
   de Google Photos. Conservar también puede volver a la foto anterior.

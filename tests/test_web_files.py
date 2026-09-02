@@ -28,9 +28,12 @@ class WebFilesTest(unittest.TestCase):
         self.assertIn('ArrowRight: () => decide("keep")', app)
         self.assertIn('ArrowUp: () => decide("organize")', app)
         self.assertIn("ArrowDown: undo", app)
+        self.assertIn('i: () => decide("print")', app)
         self.assertIn('id="destinationFolderSelect"', page)
         self.assertIn('id="newFolderName"', page)
         self.assertIn('id="organizeButton"', page)
+        self.assertIn('id="printButton"', page)
+        self.assertIn('<kbd>I</kbd>', page)
 
 
 if __name__ == "__main__":

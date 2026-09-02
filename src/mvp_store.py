@@ -5,6 +5,9 @@ from pathlib import Path
 from typing import Any
 
 
+_PRINT_COPY_UNCHANGED = object()
+
+
 class MvpStore:
     """Persistencia local de medios y decisiones; nunca guarda tokens OAuth."""
 
@@ -72,6 +75,7 @@ class MvpStore:
                     size_bytes INTEGER NOT NULL DEFAULT 0,
                     modified_at REAL,
                     decision TEXT NOT NULL DEFAULT 'pending',
+                    print_copy_relative_path TEXT,
                     available INTEGER NOT NULL DEFAULT 1,
                     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
                 );
@@ -90,6 +94,14 @@ class MvpStore:
                 );
                 """
             )
+            local_columns = {
+                row["name"]
+                for row in connection.execute("PRAGMA table_info(local_media_items)")
+            }
+            if "print_copy_relative_path" not in local_columns:
+                connection.execute(
+                    "ALTER TABLE local_media_items ADD COLUMN print_copy_relative_path TEXT"
+                )
             # "Después" dejó de ser una decisión del flujo local. Los archivos
             # históricos vuelven a la cola sin mover nada en el disco.
             connection.execute(
@@ -352,7 +364,8 @@ class MvpStore:
             rows = connection.execute(
                 """
                 SELECT item_id, original_relative_path, current_path, type,
-                       filename, mime_type, size_bytes, modified_at, decision
+                       filename, mime_type, size_bytes, modified_at, decision,
+                       print_copy_relative_path
                 FROM local_media_items
                 WHERE root_path = ? AND available = 1
                 ORDER BY COALESCE(modified_at, 0) DESC, original_relative_path
@@ -375,6 +388,7 @@ class MvpStore:
         decision: str,
         current_path: str | None = None,
         original_relative_path: str | None = None,
+        print_copy_relative_path: str | None | object = _PRINT_COPY_UNCHANGED,
     ) -> bool:
         assignments = ["decision = ?", "updated_at = CURRENT_TIMESTAMP"]
         values: list[Any] = [decision]
@@ -384,6 +398,9 @@ class MvpStore:
         if original_relative_path is not None:
             assignments.append("original_relative_path = ?")
             values.append(original_relative_path)
+        if print_copy_relative_path is not _PRINT_COPY_UNCHANGED:
+            assignments.append("print_copy_relative_path = ?")
+            values.append(print_copy_relative_path)
         values.append(item_id)
         with self._connection() as connection:
             cursor = connection.execute(

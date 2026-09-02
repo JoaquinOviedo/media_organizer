@@ -356,12 +356,14 @@ h2 { font-size: 1.25rem; }
 .decision-button.success { border-color: rgba(85, 221, 176, 0.5); }
 .decision-button.neutral { border-color: rgba(246, 201, 111, 0.38); }
 .decision-button.organize { border-color: rgba(155, 134, 255, .55); }
+.decision-button.print { border-color: rgba(85, 184, 255, .55); }
 .decision-button.undo-decision { border-color: rgba(186, 196, 216, .35); }
 .decision-icon { color: inherit; font-size: 1.75rem; line-height: 1; }
 .decision-button.danger .decision-icon { color: var(--danger); }
 .decision-button.success .decision-icon { color: var(--success); }
 .decision-button.neutral .decision-icon { color: var(--warning); }
 .decision-button.organize .decision-icon { color: var(--accent); }
+.decision-button.print .decision-icon { color: #75c9ff; }
 .decision-button.undo-decision .decision-icon { color: var(--muted); }
 .decision-button:disabled { opacity: .42; cursor: not-allowed; transform: none; }
 .undo { min-height: 44px; margin-top: 12px; border: 0; border-radius: 10px; padding: 8px 14px; background: transparent; color: var(--muted); cursor: pointer; }

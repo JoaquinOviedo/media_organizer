@@ -22,6 +22,7 @@ AUDIO_EXTENSIONS = {
 }
 DISCARD_FOLDER_NAME = "_Photo_Swipper_Filter_Para_Eliminar"
 LEGACY_DISCARD_FOLDER_NAMES = {"_SwipeClean_Para_Eliminar"}
+PRINT_FOLDER_NAME = "A imprimir"
 WINDOWS_RESERVED_NAMES = {
     "CON", "PRN", "AUX", "NUL",
     *(f"COM{number}" for number in range(1, 10)),
@@ -110,7 +111,9 @@ class LocalMediaLibrary:
             (root / folder["relative_path"]).resolve()
             for folder in self.store.list_local_organize_folders(str(root))
         }
-        excluded_folders = excluded_discards | excluded_organize_folders
+        excluded_folders = excluded_discards | excluded_organize_folders | {
+            (root / PRINT_FOLDER_NAME).resolve()
+        }
         items: list[dict[str, Any]] = []
 
         for current, directories, filenames in os.walk(root, topdown=True, followlinks=False):
@@ -272,8 +275,9 @@ class LocalMediaLibrary:
         if clean_name.casefold() in {
             DISCARD_FOLDER_NAME.casefold(),
             *(name.casefold() for name in LEGACY_DISCARD_FOLDER_NAMES),
+            PRINT_FOLDER_NAME.casefold(),
         }:
-            raise ValueError("Ese nombre está reservado para la carpeta de eliminación.")
+            raise ValueError("Ese nombre está reservado para una carpeta administrada por la aplicación.")
         return clean_name
 
     def decide(
@@ -282,7 +286,7 @@ class LocalMediaLibrary:
         decision: str,
         destination_relative_path: str | None = None,
     ) -> dict[str, Any]:
-        if decision not in {"pending", "keep", "delete", "organize"}:
+        if decision not in {"pending", "keep", "delete", "organize", "print"}:
             raise ValueError("Decisión inválida.")
         item = self.get_item(item_id)
         library = self.store.get_local_library()
@@ -291,15 +295,36 @@ class LocalMediaLibrary:
 
         root = Path(library["root_path"]).resolve()
         discard = Path(library["discard_path"]).resolve()
+        print_root = (root / PRINT_FOLDER_NAME).resolve()
         source = Path(item["current_path"]).resolve(strict=True)
         if not source.is_file() or not _is_within(source, root):
             raise FileNotFoundError("El archivo ya no está disponible.")
 
         current_decision = item["decision"]
+        stored_decision = "keep" if decision == "print" else decision
         new_path = source
         new_relative: str | None = None
+        print_copy_relative_path: str | None = item.get("print_copy_relative_path")
+        update_print_copy = False
+        created_print_copy: Path | None = None
+        removed_print_copy: Path | None = None
 
-        if decision == "delete" and current_decision != "delete":
+        if decision == "print":
+            if item["type"] != "IMAGE":
+                raise ValueError("La carpeta A imprimir acepta solamente imágenes.")
+            if current_decision != "pending":
+                raise ValueError("Esta imagen ya tiene una decisión.")
+            if not _is_within(print_root, root) or _is_within(print_root, discard):
+                raise ValueError("La carpeta A imprimir no es segura.")
+            print_root.mkdir(parents=False, exist_ok=True)
+            destination = _unique_destination(print_root / source.name)
+            created_print_copy = Path(shutil.copy2(str(source), str(destination))).resolve()
+            if not _is_within(created_print_copy, print_root):
+                created_print_copy.unlink(missing_ok=True)
+                raise ValueError("La copia para imprimir quedó fuera de la carpeta permitida.")
+            print_copy_relative_path = created_print_copy.relative_to(root).as_posix()
+            update_print_copy = True
+        elif decision == "delete" and current_decision != "delete":
             relative = Path(item["original_relative_path"])
             destination = (discard / relative).resolve()
             if not _is_within(destination, discard):
@@ -328,10 +353,40 @@ class LocalMediaLibrary:
             new_path = Path(shutil.move(str(source), str(destination))).resolve()
             new_relative = new_path.relative_to(root).as_posix()
 
-        self.store.update_local_media(
-            item_id,
-            decision,
-            current_path=str(new_path),
-            original_relative_path=new_relative,
-        )
+        if decision == "pending" and print_copy_relative_path:
+            print_copy = (root / print_copy_relative_path).resolve()
+            if not _is_within(print_copy, print_root):
+                raise ValueError("La copia para imprimir registrada no es segura.")
+            if print_copy.exists():
+                if not print_copy.is_file():
+                    raise ValueError("La copia para imprimir ya no es un archivo válido.")
+                print_copy.unlink()
+                removed_print_copy = print_copy
+            print_copy_relative_path = None
+            update_print_copy = True
+
+        try:
+            updated = self.store.update_local_media(
+                item_id,
+                stored_decision,
+                current_path=str(new_path),
+                original_relative_path=new_relative,
+                **(
+                    {"print_copy_relative_path": print_copy_relative_path}
+                    if update_print_copy
+                    else {}
+                ),
+            )
+        except Exception:
+            if created_print_copy:
+                created_print_copy.unlink(missing_ok=True)
+            if removed_print_copy and not removed_print_copy.exists():
+                shutil.copy2(str(source), str(removed_print_copy))
+            raise
+        if not updated:
+            if created_print_copy:
+                created_print_copy.unlink(missing_ok=True)
+            if removed_print_copy and not removed_print_copy.exists():
+                shutil.copy2(str(source), str(removed_print_copy))
+            raise FileNotFoundError("Archivo no encontrado.")
         return self.get_item(item_id) or {}

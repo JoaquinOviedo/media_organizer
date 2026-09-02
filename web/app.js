@@ -287,6 +287,7 @@ function render() {
   $("undoButton").disabled = state.history.length === 0 || state.decisionInFlight;
   $("deleteButton").disabled = !item || state.decisionInFlight;
   $("keepButton").disabled = !item || state.decisionInFlight;
+  $("printButton").disabled = !item || item.type !== "IMAGE" || state.decisionInFlight;
   $("organizeButton").disabled = !item || !state.selectedDestination || state.decisionInFlight;
 }
 
@@ -408,6 +409,10 @@ async function decide(decision) {
     $("newFolderName").focus();
     return;
   }
+  if (decision === "print" && item.type !== "IMAGE") {
+    toast("La opción A imprimir está disponible solamente para imágenes.", 5200);
+    return;
+  }
   state.decisionInFlight = true;
   const previous = item.decision;
   clearMedia();
@@ -426,6 +431,7 @@ async function decide(decision) {
     state.renderedItemId = null;
     render();
     if (decision === "delete") toast(`Movido a ${state.folder.discardPath}`);
+    if (decision === "print") toast("Conservada y copiada a “A imprimir”.");
     if (decision === "organize") {
       const selected = state.destinationFolders.find(
         (folder) => folder.relativePath === state.selectedDestination,
@@ -503,8 +509,10 @@ function installKeyboard() {
       ArrowRight: () => decide("keep"),
       ArrowUp: () => decide("organize"),
       ArrowDown: undo,
+      i: () => decide("print"),
     };
-    const action = actions[event.key];
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    const action = actions[key];
     if (!action) return;
     event.preventDefault();
     action();
@@ -551,6 +559,7 @@ $("rescanFolderButton").addEventListener("click", rescanLocalFolder);
 $("deleteButton").addEventListener("click", () => decide("delete"));
 $("organizeButton").addEventListener("click", () => decide("organize"));
 $("keepButton").addEventListener("click", () => decide("keep"));
+$("printButton").addEventListener("click", () => decide("print"));
 $("undoButton").addEventListener("click", undo);
 $("createDestinationFolderButton").addEventListener("click", createDestinationFolder);
 $("newFolderName").addEventListener("keydown", (event) => {

@@ -103,6 +103,25 @@ class MvpAppTest(unittest.TestCase):
         self.assertEqual(response.get_json()["selected"], "Familia")
         create_folder.assert_called_once_with("Familia")
 
+    def test_local_print_decision_is_forwarded(self):
+        printed = {"item_id": "local-one", "decision": "keep"}
+        with (
+            patch.object(mvp_app.local_library, "decide", return_value=printed) as decide,
+            patch.object(mvp_app.local_library, "status", return_value={"counts": {"keep": 1}}),
+        ):
+            response = self.client.post(
+                "/api/local/media/local-one/decision",
+                json={"decision": "print"},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["item"], printed)
+        decide.assert_called_once_with(
+            "local-one",
+            "print",
+            destination_relative_path=None,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

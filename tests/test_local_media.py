@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.local_media import DISCARD_FOLDER_NAME, LocalMediaLibrary
+from src.local_media import DISCARD_FOLDER_NAME, PRINT_FOLDER_NAME, LocalMediaLibrary
 from src.mvp_store import MvpStore
 
 
@@ -104,6 +104,50 @@ class LocalMediaLibraryTest(unittest.TestCase):
         restored = self.library.decide(item["item_id"], "pending")
         self.assertTrue(original.exists())
         self.assertEqual(Path(restored["current_path"]).resolve(), original.resolve())
+
+    def test_print_copies_image_marks_keep_and_undo_removes_copy(self):
+        source_folder = self.root / "familia"
+        source_folder.mkdir()
+        original = source_folder / "cumple.jpg"
+        original.write_bytes(b"photo-to-print")
+        print_folder = self.root / PRINT_FOLDER_NAME
+        print_folder.mkdir()
+        existing_copy = print_folder / "cumple.jpg"
+        existing_copy.write_bytes(b"existing-print")
+        self.library.scan(self.root)
+        item = self.library.list_items()[0]
+
+        printed = self.library.decide(item["item_id"], "print")
+        copy_path = self.root / printed["print_copy_relative_path"]
+
+        self.assertTrue(original.exists())
+        self.assertTrue(copy_path.exists())
+        self.assertEqual(copy_path.parent, self.root / PRINT_FOLDER_NAME)
+        self.assertEqual(copy_path.read_bytes(), original.read_bytes())
+        self.assertNotEqual(copy_path, existing_copy)
+        self.assertEqual(existing_copy.read_bytes(), b"existing-print")
+        self.assertEqual(printed["decision"], "keep")
+
+        rescanned = self.library.scan(self.root)
+        self.assertEqual(rescanned["total"], 1)
+
+        restored = self.library.decide(item["item_id"], "pending")
+        self.assertTrue(original.exists())
+        self.assertFalse(copy_path.exists())
+        self.assertTrue(existing_copy.exists())
+        self.assertEqual(restored["decision"], "pending")
+        self.assertIsNone(restored["print_copy_relative_path"])
+
+    def test_print_rejects_video(self):
+        video = self.root / "clip.mp4"
+        video.write_bytes(b"video")
+        self.library.scan(self.root)
+        item = self.library.list_items()[0]
+
+        with self.assertRaises(ValueError):
+            self.library.decide(item["item_id"], "print")
+
+        self.assertFalse((self.root / PRINT_FOLDER_NAME).exists())
 
     def test_created_organize_folders_are_saved_and_preselected(self):
         self.library.scan(self.root)

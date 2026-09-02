@@ -14,6 +14,7 @@ rápida, privada y reversible.
   foto y video, siempre mostrando el contenido completo.
 - Flecha izquierda para eliminar, derecha para conservar, arriba para ordenar
   en la carpeta activa y abajo para deshacer la última decisión.
+- Tecla `I` para conservar una imagen y copiarla a la carpeta `A imprimir`.
 - Creación de carpetas de organización desde la aplicación, con una carpeta
   activa que queda guardada y puede cambiarse en cualquier momento.
 - Movimiento reversible a `_Photo_Swipper_Filter_Para_Eliminar`, conservando la
@@ -39,6 +40,7 @@ rápida, privada y reversible.
 | `←` | Mover a la carpeta para eliminar |
 | `→` | Conservar en su ubicación |
 | `↑` | Mover a la carpeta de organización activa |
+| `I` | Conservar la imagen y copiarla a `A imprimir` |
 | `↓` | Deshacer y volver al archivo anterior |
 
 Nada se elimina definitivamente. Antes del borrado final, revisá la carpeta
@@ -47,6 +49,9 @@ Nada se elimina definitivamente. Antes del borrado final, revisá la carpeta
 La carpeta mostrada como **activa para la flecha ↑** continúa seleccionada
 hasta que elijas o crees otra. Las carpetas creadas por la aplicación quedan
 dentro de la biblioteca principal y no se vuelven a incluir en el escaneo.
+`A imprimir` también se crea dentro de la biblioteca, queda fuera del escaneo y
+solo recibe copias; el archivo original permanece donde estaba. Deshacer quita
+la copia creada por la última decisión.
 
 Para crear o actualizar el acceso directo del Escritorio:
 
