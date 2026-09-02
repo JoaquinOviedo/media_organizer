@@ -116,6 +116,9 @@ a una. La extensión espera una confirmación nueva de Google Photos o el cambio
 real a otra foto antes de continuar. Si no puede verificar una eliminación,
 detiene la cola para no seguir actuando a ciegas. Mantener `←` apretada no activa
 repetición automática: cada descarte debe ser una pulsación intencional.
+Si cambiás de idea y pulsás `→`, se cancelan las eliminaciones que todavía
+estaban esperando y la foto visible se conserva después de finalizar únicamente
+la operación que Google ya estuviera procesando.
 
 Mientras una foto está abierta y todavía no fue decidida, la extensión guarda
 localmente su identificador y dirección. Al volver a entrar a la biblioteca

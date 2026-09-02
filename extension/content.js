@@ -463,6 +463,10 @@
 
   function requestKeepCurrentPhoto() {
     if (!photoId()) return;
+    if (queuedTrashCount > 0) {
+      queuedTrashCount = 0;
+      updateDiscardControl();
+    }
     if (busy) {
       // Conserva pulsaciones cortas realizadas mientras Google termina de
       // cambiar de foto, en vez de perderlas silenciosamente.
@@ -491,7 +495,9 @@
     setBusy(true);
     const media = { id: photoId(), url: location.href };
     try {
-      await record("keep", "not_needed", "Conservar");
+      // El registro local es secundario: una app cerrada o lenta no debe
+      // impedir que Google Photos avance a la siguiente foto.
+      void record("keep", "not_needed", "Conservar", media);
       await markPhotoProcessed(media.id);
       const advanced = await goToOlderPhoto(media.id);
       if (advanced) rememberAction({

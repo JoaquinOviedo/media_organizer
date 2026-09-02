@@ -13,7 +13,7 @@ class ExtensionFilesTest(unittest.TestCase):
         content = (ROOT / "extension" / "content.js").read_text(encoding="utf-8")
 
         self.assertEqual(manifest["name"], "Photo Swipper Filter para Google Photos")
-        self.assertEqual(manifest["version"], "0.7.0")
+        self.assertEqual(manifest["version"], "0.7.1")
         self.assertEqual(manifest["background"]["service_worker"], "background.js")
         self.assertEqual(manifest["content_scripts"][0]["run_at"], "document_start")
         self.assertIn("http://127.0.0.1:8765/*", manifest["host_permissions"])
@@ -45,6 +45,7 @@ class ExtensionFilesTest(unittest.TestCase):
         self.assertIn('return freshStatusSeen ? "status" : null', content)
         self.assertIn('return "navigation"', content)
         self.assertIn("queuedTrashCount = 0", content)
+        self.assertIn('void record("keep", "not_needed", "Conservar", media)', content)
         self.assertIn("await waitFor(findOlderNavigationButton, 1800)", content)
         self.assertIn("await confirmationWatcher.wait(7000)", content)
         self.assertIn("Mostrando la siguiente foto, normalmente más antigua", content)
