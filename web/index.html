@@ -113,47 +113,40 @@
             </button>
             <button id="printButton" class="decision-button print" aria-label="Conservar y copiar a la carpeta A imprimir">
               <span class="decision-icon">I</span>
-              <span><strong>Imprimir</strong><small>conservar y copiar</small></span>
+              <span><strong>Imprimir</strong><small>copiar a “A imprimir”</small></span>
             </button>
             <button id="undoButton" class="decision-button undo-decision" aria-label="Deshacer la última decisión" disabled>
               <span class="decision-icon">↓</span>
               <span><strong>Deshacer</strong><small>volver al anterior</small></span>
             </button>
           </div>
-          <p id="keyboardHelp" class="keyboard-help hidden" aria-label="Atajos de teclado">
-            Teclado: <kbd>←</kbd> eliminar · <kbd>→</kbd> conservar ·
-            <kbd>↑</kbd> ordenar · <kbd>I</kbd> conservar y copiar a “A imprimir” ·
-            <kbd>↓</kbd> deshacer
-          </p>
+          <div id="keyboardHelp" class="keyboard-help hidden" aria-label="Atajos de teclado">
+            <span class="keyboard-title">Atajos</span>
+            <span class="keyboard-shortcut"><kbd>←</kbd><span>Eliminar</span></span>
+            <span class="keyboard-shortcut"><kbd>↑</kbd><span>Ordenar</span></span>
+            <span class="keyboard-shortcut"><kbd>→</kbd><span>Conservar</span></span>
+            <span class="keyboard-shortcut"><kbd>I</kbd><span>A imprimir</span></span>
+            <span class="keyboard-shortcut"><kbd>↓</kbd><span>Deshacer</span></span>
+          </div>
         </section>
       </section>
 
       <details class="panel queue-panel">
         <summary>
-          <span><strong>Revisar lo que moviste</strong><small>Nada se elimina automáticamente</small></span>
-          <span class="summary-action">Ver detalles</span>
+          <span><strong>Fotos apartadas para revisar</strong><small>Nada se borra solo</small></span>
+          <span class="summary-action">Ver lista</span>
         </summary>
         <div class="queue-content">
-          <section>
-            <h2>Carpeta para eliminar</h2>
-            <p>La flecha izquierda mueve el archivo manteniendo sus subcarpetas.</p>
-            <code id="discardPath" class="extension-path">Elegí una carpeta para ver el destino.</code>
-            <p class="safety-note">Todo se puede deshacer. Eliminá definitivamente los archivos solo después de revisar esta carpeta.</p>
-            <h3>Movidos recientemente</h3>
-            <div id="movedQueue" class="local-delete-queue">Todavía no moviste archivos.</div>
-          </section>
-
-          <section class="cloud-tools">
-            <h2>Google Photos</h2>
-            <p>Estado del asistente que funciona sobre Google Photos.</p>
-            <span id="extensionBadge" class="extension-badge">Comprobando extensión…</span>
-            <details class="extension-setup">
-              <summary>Configuración de la extensión</summary>
-              <code id="extensionPath" class="extension-path">Cargando…</code>
-              <button id="copyExtensionPath" class="copy-path" type="button">Copiar carpeta</button>
+          <section class="local-review-list">
+            <h2>Para revisar antes de borrar</h2>
+            <p>Acá aparecen las fotos que apartaste con la flecha izquierda. Siguen en tu computadora y podés deshacer la última acción con <kbd>↓</kbd>.</p>
+            <p class="safety-note">Cuando termines, revisá esta lista antes de borrar archivos definitivamente.</p>
+            <details class="folder-location">
+              <summary>¿En qué carpeta están?</summary>
+              <code id="discardPath" class="folder-path">Elegí una carpeta para ver el destino.</code>
             </details>
-            <h3>Últimas operaciones en Google Photos</h3>
-            <div id="extensionQueue" class="extension-queue"></div>
+            <h3>Últimas fotos apartadas</h3>
+            <div id="movedQueue" class="local-delete-queue">Todavía no moviste archivos.</div>
           </section>
         </div>
       </details>

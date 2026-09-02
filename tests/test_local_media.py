@@ -94,7 +94,10 @@ class LocalMediaLibraryTest(unittest.TestCase):
         )
 
         self.assertFalse(original.exists())
-        self.assertEqual(Path(moved["current_path"]).parent, self.root / "Familia")
+        self.assertEqual(
+            Path(moved["current_path"]).parent.resolve(),
+            (self.root / "Familia").resolve(),
+        )
         self.assertEqual(moved["decision"], "organize")
 
         status = self.library.scan(self.root)

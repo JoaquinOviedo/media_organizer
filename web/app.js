@@ -6,7 +6,6 @@ const state = {
   renderedItemId: null,
   decisionInFlight: false,
   preloadedImages: new Map(),
-  extensionPath: "",
   destinationFolders: [],
   selectedDestination: null,
 };
@@ -191,7 +190,7 @@ function renderMovedQueue() {
     const name = document.createElement("strong");
     name.textContent = item.filename;
     const detail = document.createElement("span");
-    detail.textContent = `${mediaKind(item)} · ${formatBytes(item.size_bytes)} · ${item.original_relative_path}`;
+    detail.textContent = `${mediaKind(item)} · ${formatBytes(item.size_bytes)}`;
     row.append(name, detail);
     root.appendChild(row);
   }
@@ -519,41 +518,6 @@ function installKeyboard() {
   });
 }
 
-async function loadExtensionStatus() {
-  const status = await api("/api/status");
-  state.extensionPath = status.extensionPath || "";
-  $("extensionPath").textContent = state.extensionPath || "Carpeta no disponible";
-  const badge = $("extensionBadge");
-  badge.textContent = status.extensionActive
-    ? `Extensión activa${status.extensionVersion ? ` · v${status.extensionVersion}` : ""}`
-    : "Extensión sin detectar · abrí Google Photos";
-  badge.classList.toggle("active", Boolean(status.extensionActive));
-  badge.classList.toggle("inactive", !status.extensionActive);
-}
-
-async function loadExtensionQueue() {
-  const payload = await api("/api/extension/decisions");
-  const root = $("extensionQueue");
-  root.replaceChildren();
-  if (!payload.items.length) {
-    root.textContent = "Todavía no hay operaciones registradas.";
-    return;
-  }
-  for (const item of payload.items.slice(0, 8)) {
-    const row = document.createElement("div");
-    row.className = `queue-item ${item.album_status}`;
-    const icon = item.album_status === "added"
-      ? "✓"
-      : item.album_status === "trashed"
-        ? "🗑"
-        : ["restored", "undone"].includes(item.album_status)
-          ? "↶"
-          : "!";
-    row.textContent = `${icon} ${item.photo_id.slice(0, 18)} · ${item.message || item.album_status}`;
-    root.appendChild(row);
-  }
-}
-
 $("selectFolderButton").addEventListener("click", chooseLocalFolder);
 $("rescanFolderButton").addEventListener("click", rescanLocalFolder);
 $("deleteButton").addEventListener("click", () => decide("delete"));
@@ -568,23 +532,6 @@ $("newFolderName").addEventListener("keydown", (event) => {
 $("destinationFolderSelect").addEventListener("change", (event) => {
   selectDestinationFolder(event.target.value);
 });
-$("copyExtensionPath").addEventListener("click", async () => {
-  if (!state.extensionPath) return;
-  try {
-    await navigator.clipboard.writeText(state.extensionPath);
-    toast("Carpeta de la extensión copiada.");
-  } catch {
-    const range = document.createRange();
-    range.selectNodeContents($("extensionPath"));
-    const selection = window.getSelection();
-    selection.removeAllRanges();
-    selection.addRange(range);
-    toast("La carpeta quedó seleccionada. Presioná Ctrl+C.");
-  }
-});
-
 installDrag();
 installKeyboard();
-Promise.all([loadLocalLibrary(), loadExtensionStatus(), loadExtensionQueue()])
-  .catch((error) => toast(error.message, 5200));
-window.setInterval(() => loadExtensionStatus().catch(() => {}), 30000);
+loadLocalLibrary().catch((error) => toast(error.message, 5200));
