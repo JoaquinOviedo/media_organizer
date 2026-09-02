@@ -8,14 +8,22 @@ rápida, privada y reversible.
 
 - Selección nativa de una carpeta de Windows y escaneo de todas sus subcarpetas.
 - Vista previa de imágenes, videos y audios sin subir los archivos a internet.
-- Flecha izquierda para mover, derecha para conservar, abajo para decidir más
-  tarde y arriba para deshacer.
+- Interfaz de lectura sencilla, con el contenido grande y centrado y acciones
+  explicadas en pantalla.
+- Visor adaptable a la orientación vertical, horizontal o cuadrada de cada
+  foto y video, siempre mostrando el contenido completo.
+- Flecha izquierda para eliminar, derecha para conservar, arriba para ordenar
+  en la carpeta activa y abajo para deshacer la última decisión.
+- Tecla `I` para conservar una imagen y copiarla a la carpeta `A imprimir`.
+- Creación de carpetas de organización desde la aplicación, con una carpeta
+  activa que queda guardada y puede cambiarse en cualquier momento.
 - Movimiento reversible a `_Photo_Swipper_Filter_Para_Eliminar`, conservando la
   estructura original de subcarpetas.
 - Historial y progreso guardados localmente en SQLite.
 - Precarga de las siguientes imágenes para reducir la espera.
 - Extensión opcional para revisar elementos abiertos directamente en Google
   Photos y agregarlos a `Fotos a eliminar` o enviarlos a la Papelera.
+- Acceso visible a Google Photos desde la parte superior de la aplicación.
 - Inicio oculto en Windows, apertura automática del navegador y actualización
   segura desde GitHub cuando la rama local no tiene cambios.
 
@@ -24,17 +32,26 @@ rápida, privada y reversible.
 1. Ejecutá `iniciar_mvp.bat`.
 2. Esperá a que se abra Microsoft Edge en `http://127.0.0.1:8765`.
 3. Elegí la carpeta principal que querés ordenar.
-4. Revisá los archivos con las flechas:
+4. Creá o seleccioná la carpeta que querés usar para ordenar con `↑`.
+5. Revisá los archivos con las flechas:
 
 | Tecla | Acción |
 | --- | --- |
 | `←` | Mover a la carpeta para eliminar |
 | `→` | Conservar en su ubicación |
-| `↓` | Dejar para después |
-| `↑` | Deshacer la última decisión |
+| `↑` | Mover a la carpeta de organización activa |
+| `I` | Conservar la imagen y copiarla a `A imprimir` |
+| `↓` | Deshacer y volver al archivo anterior |
 
 Nada se elimina definitivamente. Antes del borrado final, revisá la carpeta
 `_Photo_Swipper_Filter_Para_Eliminar`.
+
+La carpeta mostrada como **activa para la flecha ↑** continúa seleccionada
+hasta que elijas o crees otra. Las carpetas creadas por la aplicación quedan
+dentro de la biblioteca principal y no se vuelven a incluir en el escaneo.
+`A imprimir` también se crea dentro de la biblioteca, queda fuera del escaneo y
+solo recibe copias; el archivo original permanece donde estaba. Deshacer quita
+la copia creada por la última decisión.
 
 Para crear o actualizar el acceso directo del Escritorio:
 
@@ -85,9 +102,36 @@ de Edge. Si necesitás cargarla manualmente:
 3. Elegí **Cargar extensión sin empaquetar**.
 4. Seleccioná la carpeta `extension` de este repositorio.
 
-La extensión usa las flechas izquierda y derecha dentro de una foto o video
-abierto. Google puede cambiar su interfaz; si una operación no recibe una
-confirmación visible, se registra como fallida y no como completada.
+La extensión usa las flechas dentro de una foto o video abierto. Por defecto,
+`←` envía a la **Papelera**, `→` conserva y avanza, y `↓` intenta deshacer la
+última acción. El modo álbum continúa disponible como alternativa manual.
+Al instalarla, actualizarla o usar **Volver a cargar**, las pestañas abiertas de
+Google Photos se recargan una vez para recibir inmediatamente esta configuración.
+Después de conservar o descartar, avanza a la siguiente foto; en la biblioteca
+principal normalmente será una más antigua. En álbumes y búsquedas respeta el
+orden de ese contexto.
+
+Mientras una foto está abierta y todavía no fue decidida, la extensión guarda
+localmente su identificador y dirección. Al volver a entrar a la biblioteca
+principal de Google Photos, la abre automáticamente para continuar desde allí.
+Una decisión confirmada elimina ese punto y la foto siguiente pasa a ser el
+nuevo punto de reanudación. La extensión no fuerza esta apertura desde
+Búsqueda, Álbumes, Papelera u otras secciones elegidas por el usuario.
+
+Para una eliminación, `↓` solo actúa mientras Google Photos todavía muestra el
+botón nativo **Deshacer** correspondiente a la última confirmación. Si Google ya
+lo ocultó, la extensión no intenta adivinar: avisa que la foto debe restaurarse
+manualmente desde Papelera. Al deshacer una foto conservada, vuelve a abrir esa
+foto. Agregar a un álbum no se revierte automáticamente porque Google Photos no
+ofrece una confirmación suficientemente segura para esa operación.
+
+Google puede cambiar su interfaz; si una operación no recibe una confirmación
+visible, se registra como fallida y no como completada.
+
+Una pulsación corta de `→` conserva y garantiza un avance. Si se mantiene
+presionada, se activa el avance rápido y cada foto recorrida se registra como
+conservada. La flecha izquierda no se repite automáticamente porque puede
+producir cambios reales en un álbum o en la Papelera.
 
 ## Estructura del proyecto
 

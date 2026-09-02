@@ -9,41 +9,80 @@
   <body>
     <main class="shell">
       <header class="topbar">
-        <div>
+        <div class="brand-block">
           <p class="eyebrow">ORGANIZADOR MULTIMEDIA LOCAL</p>
           <h1>Photo Swipper Filter</h1>
+          <p class="tagline">Revisá tus recuerdos de a uno, sin borrar nada por accidente.</p>
         </div>
-        <span id="folderBadge" class="badge">Sin carpeta elegida</span>
+        <div class="topbar-actions">
+          <div class="display-preferences" aria-label="Hora y apariencia">
+            <time id="currentTime" class="current-time" aria-label="Hora actual">--:--</time>
+            <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false">
+              <span id="themeIcon" class="theme-icon" aria-hidden="true">☀</span>
+              <span id="themeLabel">Modo claro</span>
+            </button>
+          </div>
+          <span id="folderBadge" class="badge">Sin carpeta elegida</span>
+          <a class="google-photos-button" href="https://photos.google.com/" target="_blank" rel="noreferrer">
+            <span class="google-photos-icon" aria-hidden="true">✦</span>
+            <span>
+              <strong>Abrir Google Photos</strong>
+              <small>Revisar fotos de tu cuenta</small>
+            </span>
+          </a>
+        </div>
       </header>
 
-      <section class="panel setup-panel local-setup">
+      <section id="folderSetup" class="panel setup-panel local-setup">
+        <div class="step-number" aria-hidden="true">1</div>
         <div class="setup-copy-block">
-          <h2>Elegí la carpeta que querés ordenar</h2>
+          <h2>Elegí una carpeta de esta computadora</h2>
           <p id="folderCopy">
-            Se incluirán automáticamente todas sus subcarpetas, sin subir ningún archivo a internet.
+            También vamos a mostrar las fotos, videos y audios que estén dentro de sus subcarpetas.
           </p>
           <code id="rootPath" class="selected-path hidden"></code>
         </div>
         <div class="setup-actions">
-          <button id="selectFolderButton" class="button primary" type="button">Elegir carpeta</button>
-          <button id="rescanFolderButton" class="button ghost hidden" type="button">Volver a escanear</button>
+          <button id="selectFolderButton" class="button primary large" type="button">
+            <span aria-hidden="true">📁</span> Explorar carpetas
+          </button>
+          <button id="rescanFolderButton" class="button ghost hidden" type="button">Buscar archivos nuevos</button>
         </div>
       </section>
 
-      <section class="workspace">
-        <aside class="stats panel">
-          <div><strong id="pendingCount">0</strong><span>Pendientes</span></div>
-          <div><strong id="keepCount">0</strong><span>Conservar</span></div>
-          <div><strong id="deleteCount">0</strong><span>Movidos</span></div>
-          <div><strong id="laterCount">0</strong><span>Después</span></div>
-        </aside>
+      <section id="organizePanel" class="panel organize-panel hidden">
+        <div class="step-number secondary" aria-hidden="true">2</div>
+        <div class="organize-copy">
+          <p class="organize-label">CARPETA ACTIVA PARA LA FLECHA ↑</p>
+          <h2 id="selectedDestinationLabel">Todavía no elegiste una carpeta</h2>
+          <p id="destinationHelp">Creá una carpeta o elegí una de la lista. La selección queda guardada para las próximas fotos.</p>
+        </div>
+        <div class="organize-actions">
+          <label for="destinationFolderSelect">Carpetas guardadas</label>
+          <select id="destinationFolderSelect">
+            <option value="">Elegir carpeta…</option>
+          </select>
+          <div class="new-folder-row">
+            <label class="sr-only" for="newFolderName">Nombre de la carpeta nueva</label>
+            <input id="newFolderName" type="text" maxlength="80" placeholder="Ejemplo: Vacaciones" autocomplete="off" />
+            <button id="createDestinationFolderButton" class="button organize" type="button">Crear y usar</button>
+          </div>
+        </div>
+      </section>
 
+      <section class="stats panel" aria-label="Progreso de la revisión">
+        <div><strong id="pendingCount">0</strong><span>Por revisar</span></div>
+        <div><strong id="keepCount">0</strong><span>Conservados</span></div>
+        <div><strong id="deleteCount">0</strong><span>Para eliminar</span></div>
+        <div><strong id="organizeCount">0</strong><span>Ordenados</span></div>
+      </section>
+
+      <section class="workspace">
         <section class="deck-panel panel">
           <div id="emptyState" class="empty-state">
-            <div class="empty-icon">↔</div>
-            <h2>Elegí una carpeta para comenzar</h2>
-            <p>Podrás revisar fotos, videos y audios de todas sus subcarpetas.</p>
-            <button id="reviewLaterButton" class="button ghost hidden" type="button">Revisar los de después</button>
+            <div class="empty-icon">📁</div>
+            <h2>Primero explorá una carpeta</h2>
+            <p>Después vas a poder mirar cada foto, video o audio bien grande en esta pantalla.</p>
           </div>
 
           <article id="card" class="media-card hidden" aria-live="polite">
@@ -66,46 +105,58 @@
             </div>
           </article>
 
-          <div id="controlsBar" class="controls hidden">
-            <button id="deleteButton" class="round danger" aria-label="Mover a la carpeta para eliminar">←</button>
-            <button id="laterButton" class="round neutral" aria-label="Decidir después">⌛</button>
-            <button id="keepButton" class="round success" aria-label="Conservar en su lugar">→</button>
+          <div id="controlsBar" class="controls decision-grid hidden">
+            <button id="deleteButton" class="decision-button danger" aria-label="Mover a la carpeta para eliminar">
+              <span class="decision-icon">←</span>
+              <span><strong>Eliminar</strong><small>mover a revisión</small></span>
+            </button>
+            <button id="organizeButton" class="decision-button organize" aria-label="Mover a la carpeta de organización elegida">
+              <span class="decision-icon">↑</span>
+              <span><strong>Ordenar</strong><small id="organizeButtonDestination">elegí una carpeta</small></span>
+            </button>
+            <button id="keepButton" class="decision-button success" aria-label="Conservar en su lugar">
+              <span><strong>Conservar</strong><small>dejar en su lugar</small></span>
+              <span class="decision-icon">→</span>
+            </button>
+            <button id="printButton" class="decision-button print" aria-label="Conservar y copiar a la carpeta A imprimir">
+              <span class="decision-icon">I</span>
+              <span><strong>Imprimir</strong><small>copiar a “A imprimir”</small></span>
+            </button>
+            <button id="undoButton" class="decision-button undo-decision" aria-label="Deshacer la última decisión" disabled>
+              <span class="decision-icon">↓</span>
+              <span><strong>Deshacer</strong><small>volver al anterior</small></span>
+            </button>
           </div>
-          <button id="undoButton" class="undo hidden" disabled>Deshacer último movimiento</button>
-          <p id="keyboardHelp" class="keyboard-help hidden" aria-label="Atajos de teclado">
-            <kbd>←</kbd> mover · <kbd>→</kbd> conservar ·
-            <kbd>↓</kbd> después · <kbd>↑</kbd> deshacer
-          </p>
+          <div id="keyboardHelp" class="keyboard-help hidden" aria-label="Atajos de teclado">
+            <span class="keyboard-title">Atajos</span>
+            <span class="keyboard-shortcut"><kbd>←</kbd><span>Eliminar</span></span>
+            <span class="keyboard-shortcut"><kbd>↑</kbd><span>Ordenar</span></span>
+            <span class="keyboard-shortcut"><kbd>→</kbd><span>Conservar</span></span>
+            <span class="keyboard-shortcut"><kbd>I</kbd><span>A imprimir</span></span>
+            <span class="keyboard-shortcut"><kbd>↓</kbd><span>Deshacer</span></span>
+          </div>
         </section>
-
-        <aside class="panel queue-panel">
-          <h2>Carpeta para eliminar</h2>
-          <p>
-            La flecha izquierda mueve el archivo inmediatamente, manteniendo la misma estructura de subcarpetas.
-          </p>
-          <code id="discardPath" class="extension-path">Elegí una carpeta para ver el destino.</code>
-          <p class="safety-note">Nada se borra definitivamente. Podés revisar esta carpeta y eliminar todo cuando estés seguro.</p>
-
-          <h3>Movidos recientemente</h3>
-          <div id="movedQueue" class="local-delete-queue">Todavía no moviste archivos.</div>
-
-          <details class="cloud-tools">
-            <summary>También uso Google Photos</summary>
-            <p>La extensión continúa disponible para revisar directamente en Google Photos.</p>
-            <span id="extensionBadge" class="extension-badge">Comprobando extensión…</span>
-            <div class="cloud-actions">
-              <a class="button ghost" href="https://photos.google.com/" target="_blank" rel="noreferrer">Abrir Google Photos</a>
-            </div>
-            <details class="extension-setup">
-              <summary>Carpeta de la extensión</summary>
-              <code id="extensionPath" class="extension-path">Cargando…</code>
-              <button id="copyExtensionPath" class="copy-path" type="button">Copiar carpeta</button>
-            </details>
-            <h3>Operaciones reales en Google Photos</h3>
-            <div id="extensionQueue" class="extension-queue"></div>
-          </details>
-        </aside>
       </section>
+
+      <details class="panel queue-panel">
+        <summary>
+          <span><strong>Fotos apartadas para revisar</strong><small>Nada se borra solo</small></span>
+          <span class="summary-action">Ver lista</span>
+        </summary>
+        <div class="queue-content">
+          <section class="local-review-list">
+            <h2>Para revisar antes de borrar</h2>
+            <p>Acá aparecen las fotos que apartaste con la flecha izquierda. Siguen en tu computadora y podés deshacer la última acción con <kbd>↓</kbd>.</p>
+            <p class="safety-note">Cuando termines, revisá esta lista antes de borrar archivos definitivamente.</p>
+            <details class="folder-location">
+              <summary>¿En qué carpeta están?</summary>
+              <code id="discardPath" class="folder-path">Elegí una carpeta para ver el destino.</code>
+            </details>
+            <h3>Últimas fotos apartadas</h3>
+            <div id="movedQueue" class="local-delete-queue">Todavía no moviste archivos.</div>
+          </section>
+        </div>
+      </details>
 
       <div id="toast" class="toast hidden" role="status"></div>
     </main>

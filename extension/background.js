@@ -1,5 +1,24 @@
 const SERVER = "http://127.0.0.1:8765";
 
+function reloadOpenGooglePhotosTabs() {
+  chrome.tabs.query({ url: ["https://photos.google.com/*"] }, (tabs) => {
+    if (chrome.runtime.lastError) return;
+    tabs.forEach((tab) => {
+      if (!Number.isInteger(tab.id)) return;
+      chrome.tabs.reload(tab.id, () => {
+        // Recargar una pestaña puede fallar si el usuario la cerró justo antes.
+        void chrome.runtime.lastError;
+      });
+    });
+  });
+}
+
+chrome.runtime.onInstalled.addListener((details) => {
+  if (details.reason === "install" || details.reason === "update") {
+    reloadOpenGooglePhotosTabs();
+  }
+});
+
 async function post(path, payload) {
   const response = await fetch(`${SERVER}${path}`, {
     method: "POST",

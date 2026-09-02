@@ -1,3 +1,4 @@
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -68,6 +69,44 @@ class MvpStoreTest(unittest.TestCase):
         self.assertEqual(stored["type"], "VIDEO")
         self.assertEqual(stored["mime_type"], "video/mp4")
         self.assertIn('"status": "READY"', stored["metadata_json"])
+
+    def test_existing_local_database_gets_print_copy_column(self):
+        database_path = Path(self.tempdir.name) / "legacy.sqlite3"
+        connection = sqlite3.connect(database_path)
+        try:
+            connection.execute(
+                """
+                CREATE TABLE local_media_items (
+                    item_id TEXT PRIMARY KEY,
+                    root_path TEXT NOT NULL,
+                    original_relative_path TEXT NOT NULL,
+                    current_path TEXT NOT NULL,
+                    type TEXT NOT NULL,
+                    filename TEXT NOT NULL,
+                    mime_type TEXT,
+                    size_bytes INTEGER NOT NULL DEFAULT 0,
+                    modified_at REAL,
+                    decision TEXT NOT NULL DEFAULT 'pending',
+                    available INTEGER NOT NULL DEFAULT 1,
+                    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            connection.commit()
+        finally:
+            connection.close()
+
+        MvpStore(database_path)
+
+        connection = sqlite3.connect(database_path)
+        try:
+            columns = {
+                row[1]
+                for row in connection.execute("PRAGMA table_info(local_media_items)")
+            }
+        finally:
+            connection.close()
+        self.assertIn("print_copy_relative_path", columns)
 
 
 if __name__ == "__main__":
