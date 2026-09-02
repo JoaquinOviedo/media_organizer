@@ -111,6 +111,12 @@ Después de conservar o descartar, avanza a la siguiente foto; en la biblioteca
 principal normalmente será una más antigua. En álbumes y búsquedas respeta el
 orden de ese contexto.
 
+Las pulsaciones izquierdas rápidas se guardan en una cola corta y se aplican de
+a una. La extensión espera una confirmación nueva de Google Photos o el cambio
+real a otra foto antes de continuar. Si no puede verificar una eliminación,
+detiene la cola para no seguir actuando a ciegas. Mantener `←` apretada no activa
+repetición automática: cada descarte debe ser una pulsación intencional.
+
 Mientras una foto está abierta y todavía no fue decidida, la extensión guarda
 localmente su identificador y dirección. Al volver a entrar a la biblioteca
 principal de Google Photos, la abre automáticamente para continuar desde allí.

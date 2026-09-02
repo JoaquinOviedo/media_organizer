@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Photo Swipper Filter para Google Photos",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "description": "Revisa fotos y videos con flechas, retoma la última foto pendiente y permite deshacer la última acción.",
   "permissions": ["storage"],
   "host_permissions": [

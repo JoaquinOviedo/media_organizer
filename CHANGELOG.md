@@ -28,6 +28,9 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
   apartadas, sin diagnósticos técnicos ni identificadores de Google Photos.
 - La cabecera muestra la hora local y permite alternar entre modo claro y
   oscuro, recordando la apariencia elegida para la próxima vez.
+- La extensión 0.7.0 conserva hasta seis pulsaciones izquierdas rápidas y las
+  procesa de a una. Cada descarte exige una confirmación nueva de Google Photos
+  o un cambio real de foto; si no puede verificarlo, detiene la cola.
 - La extensión 0.5.0 usa Papelera como destino predeterminado y agrega `↓` para
   deshacer la última eliminación únicamente mediante el aviso nativo y visible
   de Google Photos. Conservar también puede volver a la foto anterior.
