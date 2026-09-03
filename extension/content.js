@@ -19,6 +19,11 @@
       "Ver siguiente foto", "Siguiente foto", "Foto siguiente",
       "Siguiente imagen", "Elemento siguiente",
     ],
+    previous: [
+      "View previous photo", "Previous photo", "Previous image", "Previous item",
+      "Ver foto anterior", "Foto anterior", "Imagen anterior",
+      "Elemento anterior",
+    ],
   };
 
   let busy = false;
@@ -30,6 +35,7 @@
   let rapidReachedEnd = false;
   let queuedKeepCount = 0;
   let queuedTrashCount = 0;
+  let previousNavigationRequested = false;
   let lastSavedPhotoId = null;
   let suppressedCheckpointId = null;
   let resumeAttempted = false;
@@ -250,6 +256,30 @@
     });
   }
 
+  function findPreviousNavigationButton() {
+    const expected = labels.previous.map(normalized);
+    const candidates = [...document.querySelectorAll('button, [role="button"]')]
+      .filter((element) => !element.closest("#swipeclean-controls") && !element.disabled);
+
+    const labeled = candidates.find((element) => {
+      const name = normalized(accessibleName(element));
+      return expected.some((label) => name === label || name.includes(label));
+    });
+    if (labeled) return labeled;
+
+    const iconNames = new Set(["chevron_left", "navigate_before", "arrow_back_ios", "‹", "<"]);
+    return candidates.find((element) => {
+      const rect = element.getBoundingClientRect();
+      const icon = normalized(element.textContent);
+      return iconNames.has(icon)
+        && rect.width > 0
+        && rect.height > 0
+        && rect.right < window.innerWidth / 2
+        && rect.top > window.innerHeight * 0.2
+        && rect.bottom < window.innerHeight * 0.8;
+    });
+  }
+
   async function waitFor(find, timeout = 5000) {
     const started = Date.now();
     while (Date.now() - started < timeout) {
@@ -451,6 +481,7 @@
 
   function requestDiscardCurrentPhoto() {
     if (!photoId()) return;
+    previousNavigationRequested = false;
     if (busy) {
       if (discardMode === "trash") {
         queuedTrashCount = Math.min(queuedTrashCount + 1, MAX_QUEUED_TRASH);
@@ -463,6 +494,7 @@
 
   function requestKeepCurrentPhoto() {
     if (!photoId()) return;
+    previousNavigationRequested = false;
     if (queuedTrashCount > 0) {
       queuedTrashCount = 0;
       updateDiscardControl();
@@ -478,6 +510,11 @@
 
   function flushQueuedDecision() {
     if (busy) return;
+    if (previousNavigationRequested) {
+      previousNavigationRequested = false;
+      void goToPreviousPhoto();
+      return;
+    }
     if (queuedTrashCount > 0) {
       queuedTrashCount -= 1;
       updateDiscardControl();
@@ -600,6 +637,50 @@
     }
   }
 
+  function requestPreviousPhoto() {
+    if (!photoId()) return;
+    // Comparar cambia la navegación, por lo que cualquier decisión todavía no
+    // iniciada debe cancelarse para que no se aplique sobre otra foto.
+    queuedTrashCount = 0;
+    queuedKeepCount = 0;
+    rightKeyHeld = false;
+    rapidReachedEnd = false;
+    updateDiscardControl();
+    if (busy) {
+      previousNavigationRequested = true;
+      showToast("Voy a volver a la foto anterior cuando termine la acción actual.");
+      return;
+    }
+    void goToPreviousPhoto();
+  }
+
+  async function goToPreviousPhoto(startingId = photoId()) {
+    if (busy || !startingId) return false;
+    setBusy(true);
+    try {
+      const previous = await waitFor(findPreviousNavigationButton, 1800).catch(() => null);
+      if (!previous) {
+        showToast("No hay una foto anterior disponible en este grupo.");
+        return false;
+      }
+      previous.click();
+      try {
+        await waitFor(() => {
+          const currentId = photoId();
+          return currentId && currentId !== startingId ? currentId : null;
+        }, 3500);
+        rememberCurrentPhoto();
+        showToast("Mostrando la foto anterior para comparar. No se cambió su estado.");
+        return true;
+      } catch {
+        showToast("Google Photos no pudo volver a la foto anterior.", "error");
+        return false;
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function runRapidKeepLoop() {
     if (rapidKeepLoopActive || rapidReachedEnd) return;
     rapidKeepLoopActive = true;
@@ -668,6 +749,7 @@
       </label>
       <button id="swipeclean-delete" type="button">← Papelera</button>
       <button id="swipeclean-prepare" type="button">Preparar álbum</button>
+      <button id="swipeclean-previous" type="button" title="Volver a la foto anterior para comparar, sin decidir la actual">↑ Foto anterior</button>
       <button id="swipeclean-keep" type="button" title="Conservar y avanzar a la siguiente foto, normalmente más antigua">Conservar →</button>
       <button id="swipeclean-undo" type="button" disabled>↓ Deshacer</button>
     `;
@@ -695,6 +777,7 @@
     });
     discard.addEventListener("click", requestDiscardCurrentPhoto);
     controls.querySelector("#swipeclean-prepare").addEventListener("click", prepareAlbum);
+    controls.querySelector("#swipeclean-previous").addEventListener("click", requestPreviousPhoto);
     controls.querySelector("#swipeclean-keep").addEventListener("click", requestKeepCurrentPhoto);
     controls.querySelector("#swipeclean-undo").addEventListener("click", undoLastAction);
     document.body.appendChild(controls);
@@ -721,13 +804,17 @@
     if (!photoId() || event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.target instanceof Element
       && event.target.closest("input, textarea, select, video, [contenteditable='true']")) return;
-    if (!["ArrowLeft", "ArrowRight", "ArrowDown"].includes(event.key)) return;
+    if (!["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(event.key)) return;
 
     event.preventDefault();
     event.stopPropagation();
     event.stopImmediatePropagation();
     if (event.key === "ArrowDown") {
       if (!event.repeat) void undoLastAction();
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      if (!event.repeat) requestPreviousPhoto();
       return;
     }
     if (event.key === "ArrowLeft") {
