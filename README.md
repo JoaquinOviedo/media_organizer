@@ -103,13 +103,23 @@ de Edge. Si necesitás cargarla manualmente:
 4. Seleccioná la carpeta `extension` de este repositorio.
 
 La extensión usa las flechas dentro de una foto o video abierto. Por defecto,
-`←` envía a la **Papelera**, `→` conserva y avanza, y `↓` intenta deshacer la
-última acción. El modo álbum continúa disponible como alternativa manual.
+`←` envía a la **Papelera**, `→` conserva y avanza, `↑` vuelve a la foto anterior
+sin decidirla y `↓` intenta deshacer la última acción. El modo álbum continúa
+disponible como alternativa manual.
 Al instalarla, actualizarla o usar **Volver a cargar**, las pestañas abiertas de
 Google Photos se recargan una vez para recibir inmediatamente esta configuración.
 Después de conservar o descartar, avanza a la siguiente foto; en la biblioteca
 principal normalmente será una más antigua. En álbumes y búsquedas respeta el
 orden de ese contexto.
+
+Las pulsaciones izquierdas rápidas se guardan en una cola corta y se aplican de
+a una. La extensión espera una confirmación nueva de Google Photos o el cambio
+real a otra foto antes de continuar. Si no puede verificar una eliminación,
+detiene la cola para no seguir actuando a ciegas. Mantener `←` apretada no activa
+repetición automática: cada descarte debe ser una pulsación intencional.
+Si cambiás de idea y pulsás `→`, se cancelan las eliminaciones que todavía
+estaban esperando y la foto visible se conserva después de finalizar únicamente
+la operación que Google ya estuviera procesando.
 
 Mientras una foto está abierta y todavía no fue decidida, la extensión guarda
 localmente su identificador y dirección. Al volver a entrar a la biblioteca
